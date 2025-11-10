@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+
+# Entornos
+.env
+.venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Datos pesados
+data/raw/
+data/processed/
+
+# Logs y reports
+reports/*.txt
