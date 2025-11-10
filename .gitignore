@@ -1,17 +1,44 @@
 # Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
 
-# Entornos
+# Entornos virtuales
 .env
 .venv/
+env/
+venv/
+ENV/
 
-# Jupyter
+# Jupyter Notebook
 .ipynb_checkpoints/
+*.ipynb_checkpoints
 
-# Datos pesados
-data/raw/
-data/processed/
+# IDEs
+.vscode/
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
 
-# Logs y reports
-reports/*.txt
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Archivos temporales de análisis (regenerables)
+reports/outputs/*.txt
+
+# Logs
+*.log
+
+# NOTA: Los archivos de data/ SÍ se incluyen en Git
+# para garantizar reproducibilidad del proyecto académico
