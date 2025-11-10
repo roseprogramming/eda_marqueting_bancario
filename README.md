@@ -1,325 +1,176 @@
-# PROYECTO: EDA con Python - Marketing Bancario
+# 📊 EDA Marketing Bancario
 
-## Análisis Exploratorio de Datos aplicado a Campañas de Marketing Bancario
+Análisis Exploratorio de Datos (EDA) sobre campañas de marketing bancario para identificar patrones que influyen en la suscripción de depósitos a plazo.
 
-**Entrega correspondiente al módulo "Python for Data" del Máster en Data & Analytics**
-
----
-
-## Descripción del Proyecto
-
-Este proyecto realiza un **Análisis Exploratorio de Datos (EDA)** completo sobre datos de campañas de marketing bancario, con el objetivo de identificar patrones y características de clientes que determinan el éxito en la contratación de depósitos a plazo.
-
-El análisis combina datos de campañas telefónicas con perfiles demográficos de clientes para construir un **dataset maestro** (`df_perfil_cliente`) optimizado para modelado predictivo.
+**Máster Data & Analytics – Módulo: Python for Data**
 
 ---
 
-## Objetivos
+## 🎯 Objetivo
 
-1. **Limpiar y normalizar** múltiples fuentes de datos bancarios
-2. **Integrar** información de campañas con perfiles de clientes
-3. **Identificar variables clave** que influyen en la suscripción de productos
-4. **Generar insights accionables** para segmentación de marketing
-5. **Preparar datos** para modelado predictivo posterior
+Construir un dataset maestro limpio y documentado que permita:
+
+- Detectar perfiles con mayor tasa de conversión.
+- Identificar variables predictivas útiles.
+- Evitar uso de variables con data leakage.
+- Preparar una base sólida para futuros modelos.
 
 ---
 
-## Estructura del Proyecto
+## 📁 Estructura
 
+```
 EDA_Marketing_Bancario/
-│
-├── .vscode/
-│ └── [settings.json](./.vscode/settings.json) # Configuración de VS Code (portable)
-│
-├── data/
-│ ├── raw/ # Datos originales (no modificar)
-│ │ ├── [bank-additional.csv](./data/raw/bank-additional.csv) # Datos de campaña bancaria
-│ │ └── [customer-details.xlsx](./data/raw/customer-details.xlsx) # Perfiles de clientes (2012-2014)
-│ │
-│ └── processed/ # Datos procesados y listos para análisis
-│ ├── [df_campaign_clean.csv](./data/processed/df_campaign_clean.csv)
-│ ├── [df_customer_details.csv](./data/processed/df_customer_details.csv)
-│ └── [df_perfil_cliente.csv](./data/processed/df_perfil_cliente.csv) # Dataset maestro final
-│
+├── data/                # ⚠ No incluido en Git (archivos locales)
+│   ├── raw/             # bank-additional.csv, customer-details.xlsx
+│   └── processed/       # df_campaign_clean.csv, df_customer_details.csv, df_perfil_cliente.csv
 ├── notebooks/
-│ └── [01_EDA_Analisis.ipynb](./notebooks/01_EDA_Analisis.ipynb) # Notebook principal de análisis
-│
-├── src/ # Módulos personalizados
-│ ├── [**init**.py](./src/__init__.py)
-│ ├── [analisis_exploratorio.py](./src/analisis_exploratorio.py) # Funciones de análisis (tasas, proporciones)
-│ ├── [data_cleaning.py](./src/data_cleaning.py) # Limpieza y normalización general
-│ └── [cleaning_campaing.py](./src/cleaning_campaing.py) # Limpieza específica de datos de campaña
-│
+│   └── 01_EDA_Analisis.ipynb
+├── src/
+│   ├── analisis_exploratorio.py
+│   ├── data_cleaning.py
+│   └── cleaning_campaing.py
 ├── reports/
-│ └── [informe_preliminar.md](./reports/informe_preliminar.md) # Documentación de hallazgos
-│
-├── [requirements.txt](./requirements.txt) # Dependencias del proyecto
-└── README.md # Este archivo
+│   ├── outputs/         # analisis_demografico_completo.txt
+│   └── documentacion/
+│       ├── informe_ejecutivo.md
+│       └── archive/
+├── docs/
+│   ├── especificaciones_proyecto.md
+│   └── notas.md
+├── requirements.txt
+└── README.md
+```
 
 ---
 
-## Instalación y Configuración
+## 🚀 Instalación
 
-### Requisitos Previos
+```bash
+git clone https://github.com/roseprogramming/eda_marqueting_bancario.git
+cd eda_marqueting_bancario
+python -m venv .venv
+.venv\Scripts\activate      # Windows
+pip install -r requirements.txt
+```
 
-- Python 3.9+
-- pip (gestor de paquetes)
-- Visual Studio Code (recomendado)
+Colocar:
 
-### Pasos de Instalación
+- bank-additional.csv → data/raw/
+- customer-details.xlsx → data/raw/
 
-1. **Clonar el repositorio**
-   bash
-   git clone <url-del-repositorio>
-   cd EDA_Marketing_Bancario
-2. **Crear entorno virtual**
-   bash
-   python -m venv .venv
-3. **Activar el entorno virtual**
-   - **Windows:**
-     bash
-     .venv\Scripts\activate
-   - **Mac/Linux:**
-     bash
-     source .venv/bin/activate
-4. **Instalar dependencias**
-   bash
-   pip install -r requirements.txt
-5. **Abrir en VS Code**
-   bash
-   code .
-6. **Seleccionar intérprete de Python**
-
-   - `Ctrl+Shift+P` → `Python: Select Interpreter`
-   - Seleccionar `.venv/Scripts/python.exe`
-
-7. **Ejecutar el notebook**
-   - Abrir `notebooks/01_EDA_Analisis.ipynb`
-   - Ejecutar celdas secuencialmente
+Abrir y ejecutar: notebooks/01_EDA_Analisis.ipynb
 
 ---
 
-## Datasets Utilizados
+## 🔄 Pipeline
 
-### 1. **bank-additional.csv** - Datos de Campaña
-
-- **Registros:** ~41,000 contactos telefónicos
-- **Variables:** 21 columnas (demográficas, económicas, historial de contacto)
-- **Target:** `y` (suscripción a depósito: yes/no)
-- **Problemas identificados:**
-  - Columnas numéricas leídas como `object` (`cons.price.idx`, `euribor3m`, etc.)
-  - Valores faltantes (~22% en variables económicas)
-  - Nombres no normalizados (`id_`, `cons.conf.idx`)
-  - Marcador especial `pdays=999` (nunca contactado)
-
-### 2. **customer-details.xlsx** - Perfiles de Clientes
-
-- **Hojas:** 3 (años 2012, 2013, 2014)
-- **Registros:** ~30,000 clientes únicos
-- **Variables:** ID, Income, Kidhome, Teenhome, Dt_Customer
-- **Estado:** Dataset limpio, sin valores faltantes
+1. Carga de datos (campaña + perfiles clientes).
+2. Limpieza específica campaña (tipos, recodificación, previous_contact).
+3. Normalización nombres (snake_case).
+4. Integración en df_perfil_cliente.
+5. Feature engineering (antiguedad_años, segmento_edad).
+6. Análisis demográfico y de campaña.
+7. Exportación de reportes a reports/outputs/.
 
 ---
 
-## Pipeline de Procesamiento
+## 🧪 Principales Hallazgos
 
-### Fase 1: Limpieza Individual
+| Insight                         | Resultado                    | Acción                 |
+| ------------------------------- | ---------------------------- | ---------------------- |
+| Edad avanzada (56–65)           | Tasa > 18%                   | Priorizar segmentación |
+| Éxito previo (poutcome=success) | Tasa ~65%                    | Lista premium          |
+| Antigüedad < 4 años             | Mayor receptividad           | Enfoque inicial        |
+| Income                          | No discrimina (ratio ~1.02x) | Excluir del modelo     |
+| duration                        | Data leakage                 | No usar en scoring     |
+
+---
+
+## ⚠ Data Leakage
+
+Variable duration solo conocida tras la llamada. Usar solo en análisis post-mortem, nunca en modelos predictivos previos al contacto.
+
+---
+
+## 📦 Variables recomendadas para modelado
 
 ```python
-# Campaign Data
-df_campaign_clean = cc.clean_campaign_df(df_campaign)
-df_campaign_clean = dc.clean_column_names(df_campaign_clean)
-# Customer Details
-df_customer_details = pd.concat([df_2012, df_2013, df_2014])
-df_customer_details = dc.normalizar_nombres_columnas(df_customer_details)
+features = [
+    'age','education','job','marital',
+    'poutcome','contact','campaign','previous_contact',
+    'contact_month','contact_day_of_week',
+    'emp_var_rate','euribor3m','cons_price_idx',
+    'antiguedad_años'
+]
+target = 'y'
 ```
 
-### Fase 2: Integración
+Excluir: income, kidhome, teenhome, duration.
+
+---
+
+## 📈 Próximos Pasos
+
+| Fase                | Tareas                                              |
+| ------------------- | --------------------------------------------------- |
+| Feature Engineering | Binning edad, encoding categóricas, ratio contactos |
+| Modelado            | Baseline (LogReg), árboles (RF, XGBoost), tuning    |
+| Evaluación          | AUC, Recall, Precision, curva ganancias             |
+| Deployment          | FastAPI + Streamlit (dashboard)                     |
+
+---
+
+## 🛠 Tecnologías
+
+Python 3.11 · pandas · numpy · seaborn · matplotlib · openpyxl · Jupyter
+
+---
+
+## 🗂 Documentación
+
+- docs/especificaciones_proyecto.md
+- reports/documentacion/informe_ejecutivo.md
+- reports/outputs/analisis_demografico_completo.txt
+
+---
+
+## 🧪 Reproducibilidad Notebook
+
+Si módulos no cargan:
 
 ```python
-df_perfil_cliente = pd.merge(
-    df_campaign_clean,
-    df_customer_details,
-    on='id',
-    how='inner'
-)
-```
-
-### Fase 3: Feature Engineering
-
-- Creación de variable `antiguedad_dias`
-- Variable binaria `tiene_hijos`
-- Normalización de nombres a **snake_case** (PEP 8)
-
----
-
-## Principales Hallazgos
-
-### 1. **Ingreso vs. Suscripción**
-
-- **El ingreso NO es predictor significativo**
-- Ratio de medias (éxito/fracaso): ~1.02
-- Conclusión: La propensión a suscribir no depende del poder adquisitivo
-
-### 2. **Antigüedad del Cliente**
-
-- **Variable clave identificada**
-- Clientes que suscriben: **~3.5 años** de antigüedad
-- Clientes que rechazan: **~4.2 años** de antigüedad
-- **Insight:** Clientes más recientes son más receptivos
-
-### 3. **Composición del Hogar**
-
-- **Variables `kidhome` y `teenhome` irrelevantes**
-- Tasa de suscripción estable: **~11.3%** en todas las categorías
-- No usar para segmentación
-
-### 4. **Duración de Llamada**
-
-- **Data Leakage:** No usar en modelos predictivos
-- Fuerte correlación con éxito (consecuencia, no causa)
-
-### 5. **Resultado de Campaña Anterior (`poutcome`)**
-
-- **Predictor potente**
-- Clientes con éxito previo: alta propensión a repetir
-
----
-
-## Módulos Personalizados
-
-### `data_cleaning.py`
-
-```python
-# Normalización de nombres de columnas
-normalizar_nombres_columnas(df, verbose=True)
-# Validación completa de datos
-run_checks(df, posibles_cat=['education', 'marital'])
-```
-
-### `analisis_exploratorio.py`
-
-```python
-# Cálculo de tasas de suscripción por categoría
-calcular_tasa_proporciones(df, 'variable_categorica')
-# Retorna: DataFrame con [variable, total, exitos, tasa_exito]
-```
-
-### `cleaning_campaing.py`
-
-```python
-# Limpieza específica de datos de campaña
-clean_campaign_df(df)
-# - Conversión de tipos
-# - Tratamiento de valores faltantes
-# - Recodificación de target
+import sys, os
+project_root = os.path.dirname(os.getcwd())
+if project_root not in sys.path:
+    sys.path.append(project_root)
 ```
 
 ---
 
-## Buenas Prácticas Implementadas
+## 🧹 Mantenimiento
 
-### 1. **Normalización de Nombres (PEP 8)**
+```bash
+# Eliminar cachés
+find . -type d -name "__pycache__" -exec rm -r {} +
+find . -type d -name ".ipynb_checkpoints" -exec rm -r {} +
 
-- Todo en `snake_case`: `cons_price_idx`, `dt_customer`, `tasa_exito`
-- Evitado: `PascalCase`, `camelCase`, `MAYÚSCULAS`
-
-### 2. **Modularización**
-
-- Código reutilizable en `src/`
-- Separación de responsabilidades
-- Documentación con docstrings
-
-### 3. **Reproducibilidad**
-
-- Configuración portable (`.vscode/settings.json`)
-- `requirements.txt` con versiones
-- Estructura estándar de proyecto
-
-### 4. **Control de Calidad**
-
-- Validaciones automáticas (`run_checks`)
-- Detección de data leakage
-- Análisis post-limpieza
-
----
-
-## Conclusiones Estratégicas
-
-### Perfil del Cliente Exitoso
-
-- **Antigüedad:** 3-4 años con el banco
-- **Historial:** Éxito en campañas anteriores
-- **Ingreso:** Irrelevante (no discrimina)
-- **Hogar:** Composición familiar no influye
-
-### Recomendaciones de Marketing
-
-1. **Priorizar clientes recientes** (< 4 años de antigüedad)
-2. **No segmentar por nivel de ingresos**
-3. **Aprovechar historial positivo** de campañas anteriores
-4. **Evitar variables de hogar** para scoring
-
-### Variables para Modelado Predictivo
-
-- **Incluir:** `antiguedad_dias`, `poutcome`, indicadores económicos
-- **Usar con cautela:** `duration` (data leakage)
-- **Excluir:** `income`, `kidhome`, `teenhome`
-
----
-
-## Configuración Técnica
-
-### VS Code Settings (`.vscode/settings.json`)
-
-```json
-{
-  "python.analysis.extraPaths": [
-    "${workspaceFolder}",
-    "${workspaceFolder}/src"
-  ],
-  "jupyter.notebookFileRoot": "${workspaceFolder}",
-  "python.analysis.typeCheckingMode": "basic"
-}
-```
-
-### Requirements.txt
-
-```
-pandas>=2.0.0
-numpy>=1.24.0
-matplotlib>=3.7.0
-seaborn>=0.12.0
-openpyxl>=3.1.0
-jupyter>=1.0.0
+# Ver árbol (Windows sin tree instalado)
+dir /s /b
 ```
 
 ---
 
-## Contacto y Contribuciones
+## 👤 Autor
 
-- **Autor:** Andrea Gicela Bravo Landeta
-- **Máster:** Data & Analytics
-- **Módulo:** Python for Data
+Andrea Gicela Bravo Landeta
 
-Para consultas o sugerencias, abrir un **issue** en el repositorio.
+Repositorio: https://github.com/roseprogramming/eda_marqueting_bancario
 
 ---
 
-## Licencia
+## 📅 Última actualización
 
-Este proyecto es material académico del Máster en Data & Analytics en la escuela thePower FP.
-
----
-
-## Roadmap Futuro
-
-- [ ] Modelado predictivo (Logistic Regression, Random Forest)
-- [ ] Dashboard interactivo con Streamlit
-- [ ] Análisis de series temporales de campañas
-- [ ] Optimización de segmentación con clustering
-- [ ] Implementación de pipelines con scikit-learn
+Noviembre 2025
 
 ---
-
-**Última actualización:** Noviembre 2025
