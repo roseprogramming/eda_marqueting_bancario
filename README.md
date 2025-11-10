@@ -21,7 +21,7 @@ Construir un dataset maestro limpio y documentado que permita:
 
 ```
 EDA_Marketing_Bancario/
-├── data/                # ⚠ No incluido en Git (archivos locales)
+├── data/                # Incluido en Git (28.8 MB total)
 │   ├── raw/             # bank-additional.csv, customer-details.xlsx
 │   └── processed/       # df_campaign_clean.csv, df_customer_details.csv, df_perfil_cliente.csv
 ├── notebooks/
@@ -35,9 +35,9 @@ EDA_Marketing_Bancario/
 │   └── documentacion/
 │       ├── informe_ejecutivo.md
 │       └── archive/
+│           └── informe_preliminar.md
 ├── docs/
 │   ├── especificaciones_proyecto.md
-│   └── notas.md
 ├── requirements.txt
 └── README.md
 ```
@@ -54,11 +54,7 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-Colocar:
-
-- bank-additional.csv → data/raw/
-- customer-details.xlsx → data/raw/
-
+Los datasets ya están incluidos en el repositorio.
 Abrir y ejecutar: notebooks/01_EDA_Analisis.ipynb
 
 ---
