@@ -1,7 +1,7 @@
 # src/cleaning_campaing.py
 import pandas as pd
 import numpy as np
-from . import data_cleaning as dc
+import src.data_cleaning as dc
 """
 Módulo: cleaning_campaign.py
 ======================================================

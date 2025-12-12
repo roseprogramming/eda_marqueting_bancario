@@ -84,10 +84,10 @@ def plot_numeric_distribution(df, column, title=None, figsize=(10, 6), bins=30, 
 
 
 def plot_categorical_rate(df, category_col, target_col, title=None, figsize=(12, 6), 
-                          top_n=None, rotation=45, color_palette='viridis'):
+                          top_n=None, rotation=45, *, color_palette='viridis', ax=None):
     """
     Genera gráfico de barras con tasa de conversión por categoría.
-    
+
     Parameters:
     -----------
     df : pd.DataFrame
@@ -104,13 +104,15 @@ def plot_categorical_rate(df, category_col, target_col, title=None, figsize=(12,
         Mostrar solo las top N categorías por tasa
     rotation : int
         Rotación de las etiquetas del eje X
-    color_palette : str
-        Paleta de colores de seaborn
-        
+    color_palette : str, optional (keyword only)
+        Paleta de colores de seaborn (por defecto 'viridis').
+    ax : matplotlib.axes.Axes, optional (keyword only)
+        Eje sobre el que dibujar el gráfico. Si no se proporciona, se crea uno nuevo.
+
     Returns:
     --------
     fig, ax : matplotlib objects
-        Figura y ejes del gráfico
+        Figura y ejes del gráfico (si se crea fig), o (None, ax) si se pasa ax externo.
     """
     # Calcular tasas por categoría
     df_temp = df[[category_col, target_col]].copy()
@@ -128,22 +130,23 @@ def plot_categorical_rate(df, category_col, target_col, title=None, figsize=(12,
         tasas = tasas.head(top_n)
     
     # Crear gráfico
-    fig, ax = plt.subplots(figsize=figsize)
-    
+    created_fig = False
+    if ax is None:
+        fig, ax = plt.subplots(figsize=figsize)
+        created_fig = True
+    else:
+        fig = ax.figure
     # Barras
     colors = sns.color_palette(color_palette, len(tasas))
     bars = ax.bar(range(len(tasas)), tasas['tasa_exito'], color=colors, edgecolor='black', alpha=0.8)
-    
     # Línea de tasa global
     tasa_global = (df[target_col].sum() / len(df)) * 100
     ax.axhline(tasa_global, color='red', linestyle='--', linewidth=2, 
                label=f'Tasa Global: {tasa_global:.1f}%')
-    
     # Etiquetas en barras
     for i, (idx, row) in enumerate(tasas.iterrows()):
         ax.text(i, row['tasa_exito'] + 0.5, f"{row['tasa_exito']:.1f}%", 
                 ha='center', fontsize=9, fontweight='bold')
-    
     # Configuración de ejes
     ax.set_xticks(range(len(tasas)))
     ax.set_xticklabels(tasas.index, rotation=rotation, ha='right')
@@ -153,8 +156,10 @@ def plot_categorical_rate(df, category_col, target_col, title=None, figsize=(12,
                  fontsize=14, fontweight='bold')
     ax.legend()
     ax.grid(axis='y', alpha=0.3)
-    
-    return fig, ax
+    if created_fig:
+        return fig, ax
+    else:
+        return None, ax
 
 
 def plot_correlation_heatmap(df, title=None, figsize=(12, 10), cmap='coolwarm', 
@@ -261,8 +266,19 @@ def save_plot(filename, dpi=300, bbox_inches='tight'):
     bbox_inches : str
         Ajuste de bordes ('tight' para ajustar automáticamente)
     """
-    import os
-    os.makedirs('reports/outputs', exist_ok=True)
-    filepath = f'reports/outputs/{filename}'
-    plt.savefig(filepath, dpi=dpi, bbox_inches=bbox_inches)
-    print(f"✓ Gráfico guardado: {filepath}")
+    from pathlib import Path
+    import matplotlib.pyplot as plt
+    # Guardar la figura en la carpeta 'reports/outputs' en la raíz del proyecto
+    current_path = Path(__file__).resolve()
+    # Subir hasta la raíz del proyecto (donde está la carpeta 'reports')
+    for parent in current_path.parents:
+        if (parent / 'reports').exists():
+            outputs_dir = parent / 'reports' / 'outputs'
+            outputs_dir.mkdir(parents=True, exist_ok=True)
+            break
+    else:
+        raise FileNotFoundError("No se encontró la carpeta 'reports' en la jerarquía de directorios.")
+    # Guardar el archivo en 'reports/outputs/filename.png'
+    output_path = outputs_dir / filename
+    plt.savefig(output_path, dpi=dpi, bbox_inches=bbox_inches)
+    print(f"Gráfico guardado en: {output_path}")

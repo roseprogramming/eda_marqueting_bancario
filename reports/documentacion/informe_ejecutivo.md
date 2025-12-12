@@ -2,7 +2,7 @@
 
 Proyecto: Predicción de suscripción a depósitos a plazo  
 Periodo analizado: 2012–2014  
-Fecha de actualización: 10/11/2025
+Fecha de actualización: 12/12/2025
 
 ---
 
@@ -194,6 +194,11 @@ Ajustar umbrales con base en costes y capacidad operativa (curvas de ganancias y
 ## 8) Trazabilidad y artefactos
 
 - Notebook principal: notebooks/01_EDA_Analisis.ipynb
+  - BLOQUE 1: Importación y Configuración (1.1-1.5)
+  - BLOQUE 2: Carga y Preparación de Datos (2.1-2.4)
+  - BLOQUE 3: Visualizaciones Interactivas (3.1-3.4)
+  - BLOQUE 4: EDA - Análisis Exploratorio (4.1-4.2)
+- Pipeline ETL: src/pipeline.py (9 pasos)
 - Datasets procesados: data/processed/
   - df_campaign_clean.csv
   - df_customer_details.csv

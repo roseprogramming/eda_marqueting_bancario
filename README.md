@@ -86,9 +86,9 @@ EDA_Marketing_Bancario/
 │   ├── raw/             # bank-additional.csv, customer-details.xlsx
 │   └── processed/       # df_campaign_clean.csv, df_customer_details.csv, df_perfil_cliente.csv
 ├── notebooks/
-│   └── 01_EDA_Analisis.ipynb  # Notebook principal de análisis
+│   └── 01_EDA_Analisis.ipynb  # Notebook principal (estructura en 4 bloques)
 ├── src/
-│   ├── pipeline.py                 # Pipeline completo
+│   ├── pipeline.py                 # Pipeline ETL de 9 pasos
 │   ├── analisis_exploratorio.py
 │   ├── data_cleaning.py
 │   ├── cleaning_campaing.py
@@ -104,6 +104,17 @@ EDA_Marketing_Bancario/
 ├── requirements.txt
 └── README.md (Este archivo)
 ```
+
+### 📓 Estructura del Notebook
+
+El notebook `01_EDA_Analisis.ipynb` está organizado en **3 bloques principales**:
+
+| Bloque       | Título                         | Contenido principal                                                        |
+| ------------ | ------------------------------ | -------------------------------------------------------------------------- |
+| **BLOQUE 1** | Importación y Configuración    | Librerías, configuración visual, paths, módulos, utilidades                |
+| **BLOQUE 2** | Carga y Preparación (ETL)      | Pipeline ETL, carga y limpieza de datos, generación de datasets procesados |
+| **BLOQUE 3** | Análisis Exploratorio de Datos | Estadísticas, distribuciones, tasas, correlaciones, perfil demográfico,    |
+|              |                                | factores de campaña, visualizaciones y conclusiones                        |
 
 ---
 
@@ -139,12 +150,17 @@ cd tu\proyecto
 
 ## 📝 Código del Pipeline
 
-El archivo `src/pipeline.py` contiene:
+El archivo `src/pipeline.py` ejecuta un ETL de **9 pasos**:
 
-- Lectura de CSV y Excel
-- Limpieza de tipos, fechas, nombres
-- Recodificación de variables especiales
-- Unión de datasets por `id`
+1. Cargar raw data con `index_col=0`
+2. Limpiar campaña con `clean_campaign_df()` + `clean_column_names()`
+3. Guardar `df_campaign_clean.csv` (24 columnas)
+4. Concatenar customers con keys por año + `reset_index(level=0)`
+5. Normalizar customers con `clean_column_names()`
+6. Guardar `df_customer_details.csv` (7 columnas)
+7. Merge con `left_on='id', right_on='id'`
+8. `set_index('id')` para UUID como índice
+9. Guardar `df_perfil_cliente.csv` (43,000 × 29)
 
 **Ver archivo:** [src/pipeline.py](src/pipeline.py)
 
@@ -154,7 +170,7 @@ El archivo `src/pipeline.py` contiene:
 
 ### Estadísticas Clave
 
-- **Dataset final:** 43,000 registros × 30 variables
+- **Dataset final:** 43,000 registros × 29 variables
 - **Tasa de conversión global:** 11.3% (4,640 suscripciones)
 - **Periodo:** 2012–2014 (campañas telefónicas)
 
@@ -254,6 +270,12 @@ Variable `duration` solo conocida tras la llamada. Usar solo en análisis post-m
 - ¿Cuántas visualizaciones son "suficientes"?
 - Solución: **Documentar decisiones en docstrings y comments**
 
+### Reflexión sobre la evolución y el aprendizaje
+
+A lo largo del desarrollo, muchas de estas dificultades surgieron a medida que tomaba decisiones sobre la arquitectura y la modularidad del proyecto. Por un lado, busqué hacer el código más modular y robusto, dividiendo funciones en varios scripts y mejorando la reutilización. Por otro, fui simplificando el archivo principal (el notebook) para que fuera más claro y fácil de seguir.
+
+En ocasiones, al cambiar de estrategia o cuando una decisión no funcionaba como esperaba, tuve que identificar el punto exacto de error, volver atrás y restaurar partes del trabajo anterior, procurando no perder los avances y mejoras que sí me gustaban. Este proceso de prueba, error y ajuste me permitió aprender a equilibrar la complejidad técnica con la claridad y la mantenibilidad, y a valorar la importancia de la documentación y el control de versiones para no perder el progreso logrado.
+
 ---
 
 ## �📦 Variables recomendadas para modelado
@@ -322,3 +344,11 @@ Repositorio: https://github.com/roseprogramming/eda_marqueting_bancario
 ## 📅 Última actualización
 
 Diciembre 2025
+
+---
+
+### Sobre la documentación
+
+La documentación de este proyecto se ha hecho especialmente exhaustiva para no perderme yo misma durante el desarrollo y para no olvidar detalles importantes en el futuro. Este esfuerzo me ha servido mucho para entender mejor cada paso, justificar decisiones y poder retomar el trabajo en cualquier momento sin confusión. Además, parte de la documentación y la estructuración del proyecto se ha realizado con ayuda de herramientas de Inteligencia Artificial, lo que ha facilitado la organización, la revisión y la mejora continua del código y los informes.
+
+---
