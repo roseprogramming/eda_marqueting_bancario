@@ -76,6 +76,8 @@ Detalles técnicos completos:
 
 ## 3.5) Visualizaciones Clave
 
+El análisis incluye 12 visualizaciones que cubren distribuciones, tasas de conversión, correlaciones, efectividad temporal y segmentación:
+
 ### Distribución de Edad
 
 ![Distribución de Edad](../outputs/01_distribucion_edad.png)
@@ -121,6 +123,36 @@ Clientes solteros (single) presentan la tasa más alta (13.9%). Casados y divorc
 ![Boxplot de Duration](../outputs/07_boxplot_duration.png)
 
 **CRÍTICO - Data Leakage:** Clientes que suscribieron (y=1) tienen duración 2.5× mayor que rechazantes (552s vs 220s). Esta variable NO debe usarse en modelos previos al contacto; es perfecta información del futuro.
+
+### Evolución Temporal de la Conversión
+
+![Evolución Temporal](../outputs/08_evolucion_temporal.png)
+
+La tasa de conversión muestra variabilidad a lo largo del tiempo, con ciertos periodos de mayor y menor éxito. Esto sugiere la importancia de factores estacionales y macroeconómicos en el comportamiento del cliente. Los picos y valles pueden correlacionar con campañas específicas o condiciones económicas.
+
+### Efectividad de Campañas por Número de Contactos
+
+![Efectividad de Campañas](../outputs/09_efectividad_campanas.png)
+
+**Hallazgo operativo crítico:** La tasa de conversión muestra un patrón de rendimientos decrecientes. El primer contacto tiene la mayor efectividad, y múltiples contactos (>3) pueden indicar saturación del cliente. Recomendación: optimizar frecuencia de contacto para maximizar ROI.
+
+### Impacto del Resultado de Campaña Anterior
+
+![Tasa por Poutcome](../outputs/10_tasa_por_poutcome.png)
+
+**Predictor más fuerte identificado:** Clientes con éxito previo (poutcome=success) muestran tasas de conversión dramáticamente superiores (~65%) comparado con clientes sin historial o con fracaso previo (<10%). Este es el segmento prioritario para campañas futuras.
+
+### Impacto de Variables Macroeconómicas
+
+![Impacto Económico](../outputs/11_impacto_economico.png)
+
+Los indicadores económicos muestran relación con la propensión a suscribir. Tasas de empleo, índices de precios y euribor revelan patrones de sensibilidad del cliente al contexto económico. Variables altamente correlacionadas entre sí sugieren considerar selección de features o PCA.
+
+### Análisis de Segmentos de Edad
+
+![Segmentos de Edad](../outputs/12_segmentos_edad.png)
+
+El análisis detallado por segmento de edad confirma que grupos de mayor edad (51+) presentan mejores tasas de conversión. El segmento 61+ muestra la tasa más alta, aunque con menor volumen. Los grupos jóvenes (18-30) tienen baja conversión pero alto volumen, representando una oportunidad si se optimiza el mensaje.
 
 ---
 

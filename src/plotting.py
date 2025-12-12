@@ -266,3 +266,282 @@ def save_plot(filename, dpi=300, bbox_inches='tight'):
     filepath = f'reports/outputs/{filename}'
     plt.savefig(filepath, dpi=dpi, bbox_inches=bbox_inches)
     print(f"✓ Gráfico guardado: {filepath}")
+
+
+def plot_time_series_rate(df, date_col, target_col, freq='M', title=None, figsize=(14, 6)):
+    """
+    Genera gráfico de serie temporal de tasa de conversión.
+    
+    Parameters:
+    -----------
+    df : pd.DataFrame
+        DataFrame con los datos
+    date_col : str
+        Nombre de la columna de fecha
+    target_col : str
+        Nombre de la variable objetivo binaria
+    freq : str
+        Frecuencia de agregación ('M'=mensual, 'Q'=trimestral, 'Y'=anual)
+    title : str, optional
+        Título del gráfico
+    figsize : tuple
+        Tamaño de la figura
+        
+    Returns:
+    --------
+    fig, ax : matplotlib objects
+        Figura y ejes del gráfico
+    """
+    fig, ax = plt.subplots(figsize=figsize)
+    
+    # Preparar datos
+    df_temp = df[[date_col, target_col]].copy()
+    df_temp[date_col] = pd.to_datetime(df_temp[date_col], errors='coerce')
+    df_temp = df_temp.dropna()
+    
+    # Agrupar por periodo
+    df_temp['period'] = df_temp[date_col].dt.to_period(freq)
+    
+    # Calcular tasas
+    tasas = df_temp.groupby('period').agg(
+        total=(target_col, 'count'),
+        exitos=(target_col, 'sum')
+    )
+    tasas['tasa'] = (tasas['exitos'] / tasas['total']) * 100
+    
+    # Convertir periodo a timestamp para graficar
+    tasas.index = tasas.index.to_timestamp()
+    
+    # Línea principal
+    ax.plot(tasas.index, tasas['tasa'], marker='o', linewidth=2, markersize=8, color='steelblue', label='Tasa de Conversión')
+    
+    # Línea de tasa global
+    tasa_global = (df[target_col].sum() / len(df)) * 100
+    ax.axhline(tasa_global, color='red', linestyle='--', linewidth=2, label=f'Media Global: {tasa_global:.1f}%')
+    
+    # Etiquetas en puntos
+    for idx, val in zip(tasas.index, tasas['tasa']):
+        ax.text(idx, val + 0.5, f"{val:.1f}%", ha='center', fontsize=9)
+    
+    # Configuración
+    ax.set_xlabel('Periodo', fontsize=12)
+    ax.set_ylabel('Tasa de Conversión (%)', fontsize=12)
+    ax.set_title(title or 'Evolución Temporal de la Tasa de Conversión', fontsize=14, fontweight='bold')
+    ax.legend()
+    ax.grid(axis='y', alpha=0.3)
+    plt.xticks(rotation=45, ha='right')
+    
+    return fig, ax
+
+
+def plot_campaign_effectiveness(df, campaign_col, target_col, title=None, figsize=(12, 6), max_campaigns=10):
+    """
+    Genera gráfico de efectividad por número de contactos.
+    
+    Parameters:
+    -----------
+    df : pd.DataFrame
+        DataFrame con los datos
+    campaign_col : str
+        Nombre de la columna de número de contactos
+    target_col : str
+        Nombre de la variable objetivo binaria
+    title : str, optional
+        Título del gráfico
+    figsize : tuple
+        Tamaño de la figura
+    max_campaigns : int
+        Máximo número de campañas a mostrar
+        
+    Returns:
+    --------
+    fig, ax : matplotlib objects
+        Figura y ejes del gráfico
+    """
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=figsize)
+    
+    # Preparar datos
+    df_temp = df[[campaign_col, target_col]].copy()
+    df_temp = df_temp.dropna()
+    df_temp[campaign_col] = df_temp[campaign_col].clip(upper=max_campaigns)
+    
+    # Calcular estadísticas
+    stats = df_temp.groupby(campaign_col).agg(
+        total=(target_col, 'count'),
+        exitos=(target_col, 'sum')
+    )
+    stats['tasa'] = (stats['exitos'] / stats['total']) * 100
+    
+    # Gráfico 1: Tasa de conversión
+    colors = ['green' if t > stats['tasa'].mean() else 'orange' for t in stats['tasa']]
+    ax1.bar(stats.index, stats['tasa'], color=colors, edgecolor='black', alpha=0.8)
+    ax1.axhline(stats['tasa'].mean(), color='red', linestyle='--', linewidth=2, label=f'Media: {stats["tasa"].mean():.1f}%')
+    ax1.set_xlabel('Número de Contactos', fontsize=12)
+    ax1.set_ylabel('Tasa de Conversión (%)', fontsize=12)
+    ax1.set_title('Tasa de Conversión por Contactos', fontsize=12, fontweight='bold')
+    ax1.legend()
+    ax1.grid(axis='y', alpha=0.3)
+    
+    # Gráfico 2: Volumen de clientes
+    ax2.bar(stats.index, stats['total'], color='steelblue', edgecolor='black', alpha=0.8)
+    ax2.set_xlabel('Número de Contactos', fontsize=12)
+    ax2.set_ylabel('Número de Clientes', fontsize=12)
+    ax2.set_title('Volumen de Clientes por Contactos', fontsize=12, fontweight='bold')
+    ax2.grid(axis='y', alpha=0.3)
+    
+    # Añadir etiquetas
+    for i, (idx, row) in enumerate(stats.iterrows()):
+        ax1.text(idx, row['tasa'] + 0.5, f"{row['tasa']:.1f}%", ha='center', fontsize=9)
+        ax2.text(idx, row['total'] + 100, f"{int(row['total'])}", ha='center', fontsize=9)
+    
+    fig.suptitle(title or 'Análisis de Efectividad de Campañas', fontsize=14, fontweight='bold', y=1.02)
+    plt.tight_layout()
+    
+    return fig, (ax1, ax2)
+
+
+def plot_segment_analysis(df, segment_col, target_col, title=None, figsize=(14, 6), min_size=100):
+    """
+    Genera análisis visual de segmentos con tasa y tamaño.
+    
+    Parameters:
+    -----------
+    df : pd.DataFrame
+        DataFrame con los datos
+    segment_col : str
+        Nombre de la columna de segmentación
+    target_col : str
+        Nombre de la variable objetivo binaria
+    title : str, optional
+        Título del gráfico
+    figsize : tuple
+        Tamaño de la figura
+    min_size : int
+        Tamaño mínimo de segmento para mostrar
+        
+    Returns:
+    --------
+    fig, ax : matplotlib objects
+        Figura y ejes del gráfico
+    """
+    fig, ax = plt.subplots(figsize=figsize)
+    
+    # Preparar datos
+    df_temp = df[[segment_col, target_col]].copy()
+    df_temp = df_temp.dropna()
+    
+    # Calcular estadísticas
+    stats = df_temp.groupby(segment_col, observed=False).agg(
+        total=(target_col, 'count'),
+        exitos=(target_col, 'sum')
+    )
+    stats = stats[stats['total'] >= min_size]  # Filtrar segmentos pequeños
+    stats['tasa'] = (stats['exitos'] / stats['total']) * 100
+    stats = stats.sort_values('tasa', ascending=False)
+    
+    # Crear gráfico de barras con doble eje
+    x_pos = range(len(stats))
+    
+    # Eje 1: Tasa de conversión
+    color1 = 'steelblue'
+    ax.bar(x_pos, stats['tasa'], color=color1, alpha=0.8, edgecolor='black', label='Tasa de Conversión (%)')
+    ax.set_xlabel(segment_col.replace('_', ' ').title(), fontsize=12)
+    ax.set_ylabel('Tasa de Conversión (%)', color=color1, fontsize=12)
+    ax.tick_params(axis='y', labelcolor=color1)
+    
+    # Línea de tasa global
+    tasa_global = (df[target_col].sum() / len(df)) * 100
+    ax.axhline(tasa_global, color='red', linestyle='--', linewidth=2, label=f'Media: {tasa_global:.1f}%')
+    
+    # Eje 2: Tamaño del segmento
+    ax2 = ax.twinx()
+    color2 = 'darkgreen'
+    ax2.plot(x_pos, stats['total'], color=color2, marker='D', linewidth=2, markersize=8, label='Tamaño Segmento')
+    ax2.set_ylabel('Número de Clientes', color=color2, fontsize=12)
+    ax2.tick_params(axis='y', labelcolor=color2)
+    
+    # Configuración
+    ax.set_xticks(x_pos)
+    ax.set_xticklabels(stats.index, rotation=45, ha='right')
+    ax.set_title(title or f'Análisis de Segmentos: {segment_col.replace("_", " ").title()}', fontsize=14, fontweight='bold')
+    
+    # Leyendas
+    lines1, labels1 = ax.get_legend_handles_labels()
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    ax.legend(lines1 + lines2, labels1 + labels2, loc='upper right')
+    
+    ax.grid(axis='y', alpha=0.3)
+    
+    return fig, ax
+
+
+def plot_economic_impact(df, economic_vars, target_col, title=None, figsize=(14, 8)):
+    """
+    Genera análisis de impacto de variables económicas.
+    
+    Parameters:
+    -----------
+    df : pd.DataFrame
+        DataFrame con los datos
+    economic_vars : list
+        Lista de nombres de variables económicas
+    target_col : str
+        Nombre de la variable objetivo binaria
+    title : str, optional
+        Título del gráfico
+    figsize : tuple
+        Tamaño de la figura
+        
+    Returns:
+    --------
+    fig, axes : matplotlib objects
+        Figura y ejes del gráfico
+    """
+    n_vars = len(economic_vars)
+    n_cols = 2
+    n_rows = (n_vars + 1) // 2
+    
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=figsize)
+    axes = axes.flatten() if n_vars > 1 else [axes]
+    
+    for idx, var in enumerate(economic_vars):
+        ax = axes[idx]
+        
+        # Preparar datos
+        df_temp = df[[var, target_col]].copy()
+        df_temp = df_temp.dropna()
+        
+        # Crear bins
+        df_temp[f'{var}_bin'] = pd.qcut(df_temp[var], q=5, duplicates='drop')
+        
+        # Calcular tasas por bin
+        stats = df_temp.groupby(f'{var}_bin', observed=False).agg(
+            total=(target_col, 'count'),
+            exitos=(target_col, 'sum')
+        )
+        stats['tasa'] = (stats['exitos'] / stats['total']) * 100
+        
+        # Graficar
+        x_labels = [f"{interval.left:.2f} - {interval.right:.2f}" for interval in stats.index]
+        colors = sns.color_palette("RdYlGn", len(stats))
+        ax.bar(range(len(stats)), stats['tasa'], color=colors, edgecolor='black', alpha=0.8)
+        
+        # Línea de media
+        tasa_global = (df[target_col].sum() / len(df)) * 100
+        ax.axhline(tasa_global, color='red', linestyle='--', linewidth=2, alpha=0.7)
+        
+        ax.set_title(f'{var.replace("_", " ").title()}', fontsize=11, fontweight='bold')
+        ax.set_xlabel('Rango', fontsize=10)
+        ax.set_ylabel('Tasa (%)', fontsize=10)
+        ax.set_xticks(range(len(stats)))
+        ax.set_xticklabels(x_labels, rotation=45, ha='right', fontsize=8)
+        ax.grid(axis='y', alpha=0.3)
+    
+    # Ocultar ejes extras
+    for idx in range(len(economic_vars), len(axes)):
+        axes[idx].set_visible(False)
+    
+    fig.suptitle(title or 'Impacto de Variables Económicas en Conversión', fontsize=14, fontweight='bold')
+    plt.tight_layout()
+    
+    return fig, axes
