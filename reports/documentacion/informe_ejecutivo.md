@@ -74,6 +74,56 @@ Detalles técnicos completos:
 
 ---
 
+## 3.5) Visualizaciones Clave
+
+### Distribución de Edad
+
+![Distribución de Edad](../outputs/01_distribucion_edad.png)
+
+Los clientes presentan una distribución roughly normal alrededor de los 40 años. Los segmentos de mayor edad (56-65) muestran tasas de conversión superiores, sugiriendo que la madurez del cliente correlaciona con la receptividad.
+
+### Distribución de Ingresos
+
+![Distribución de Ingresos](../outputs/02_distribucion_ingresos.png)
+
+La distribución de ingresos es aproximadamente uniforme, sin patrones claros de discriminación. Esta característica confirma hallazgos previos: el income tiene bajo poder predictivo en este contexto.
+
+### Tasa de Conversión por Ocupación
+
+![Tasa de Conversión por Ocupación](../outputs/03_tasa_por_ocupacion.png)
+
+**Hallazgo destacado:** Estudiantes y retirados presentan tasas superiores al 25%, mientras que trabajadores manuales ("blue-collar") y servicios están por debajo de la media (11.3%). Los directivos y profesionales también muestran tasas altas (~14%).
+
+### Tasa de Conversión por Educación
+
+![Tasa de Conversión por Educación](../outputs/04_tasa_por_educacion.png)
+
+Mayor nivel educativo correlaciona positivamente con conversión. Clientes con educación superior presentan tasas del 22% vs 7-8% en niveles básicos. Recomendación: priorizar segmentos educados en campañas.
+
+### Tasa de Conversión por Estado Civil
+
+![Tasa de Conversión por Estado Civil](../outputs/05_tasa_por_estado_civil.png)
+
+Clientes solteros (single) presentan la tasa más alta (13.9%). Casados y divorciados están alrededor de la media (10%). Estado civil es un segmentador débil comparado con edad/educación.
+
+### Matriz de Correlaciones
+
+![Matriz de Correlaciones](../outputs/06_matriz_correlaciones.png)
+
+**Hallazgos de colinealidad:**
+
+- Variables macroeconómicas presentan alta correlación entre sí (emp_var_rate, cons_price_idx, euribor3m, nr_employed: correlaciones > 0.7)
+- Esto sugiere que podrían ser redundantes; considerar PCA o selección de características
+- Variables demográficas (age, income, familia) tienen baja correlación con target, confirmando baja señal predictiva
+
+### Distribución de Duración de Llamada
+
+![Boxplot de Duration](../outputs/07_boxplot_duration.png)
+
+**CRÍTICO - Data Leakage:** Clientes que suscribieron (y=1) tienen duración 2.5× mayor que rechazantes (552s vs 220s). Esta variable NO debe usarse en modelos previos al contacto; es perfecta información del futuro.
+
+---
+
 ## 4) Data leakage
 
 Variable afectada:

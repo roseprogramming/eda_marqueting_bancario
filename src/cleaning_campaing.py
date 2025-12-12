@@ -1,7 +1,7 @@
 # src/cleaning_campaing.py
 import pandas as pd
 import numpy as np
-import src.data_cleaning as dc
+from . import data_cleaning as dc
 """
 Módulo: cleaning_campaign.py
 ======================================================
@@ -40,19 +40,19 @@ print(df_campaign_clean.head())
 
 """
 
-def clean_campaign_df(df_campaign_original):
+def clean_campaign_df(df_campaign_original, impute: bool = False):
     """
     Limpia y transforma el DataFrame de campañas bancarias (df_campaign).
-    Asegura tipos correctos para 'age' (int) y variables macro (float) 
-    y gestiona NaNs y valores especiales como 999 en 'pdays'.
+    Permite desactivar imputaciones para EDA (impute=False por defecto).
     Args:
         df_campaign_original (pd.DataFrame): DataFrame original con datos de la campaña.
+        impute (bool): Si True, aplica imputaciones (mediana/moda) antes de castear.
     Returns:
         pd.DataFrame: DataFrame limpio y listo para análisis/modelado.
     """
     df = df_campaign_original.copy()
     
-    # 1. Limpiar separadores decimales, convertir a FLOAT, e IMPUTAR MEDIANA (Manual)
+    # 1. Limpiar separadores decimales y convertir a float
     num_float = ['cons.price.idx', 'cons.conf.idx', 'euribor3m', 'nr.employed']
     for c in num_float:
         if c in df.columns:
@@ -60,8 +60,8 @@ def clean_campaign_df(df_campaign_original):
             df[c] = df[c].astype(str).str.replace(',', '.', regex=False)
             df[c] = pd.to_numeric(df[c], errors='coerce')
             
-            # 1.2 Imputación de NaNs de FLOAT (Manual con valor escalar)
-            if df[c].isnull().any():
+            # 1.2 Imputación opcional de NaNs (mediana)
+            if impute and df[c].isnull().any():
                 median_val = df[c].median()
                 df[c] = df[c].fillna(median_val)
     
@@ -97,18 +97,23 @@ def clean_campaign_df(df_campaign_original):
             df[col] = df[col].astype(str).str.split(',').str[0]
             df[col] = df[col].replace({'nan': '0', 'unknown': '0', '0.0': '0', '1.0': '1'}).fillna('0')
 
-    # 4. Imputaciones y Conversión a INT
-    
-    # A. Imputación MANUAL de 'age' (MEDIANA ESCALAR y Conversión a INT)
-    if 'age' in df.columns:
-        if df['age'].isnull().any():
-            # **CORRECCIÓN DEL IntCastingNaNError**
-            age_median = df['age'].median() # <-- Usamos mediana para obtener un escalar
-            df['age'] = df['age'].fillna(age_median)
-        df['age'] = df['age'].astype(int) 
+    # 3.b Normalización de nombre de id
+    if 'id_' in df.columns and 'id' not in df.columns:
+        df = df.rename(columns={'id_': 'id'})
 
-    # B. Imputación por moda (solo 'education' en este punto)
-    df = dc.impute_mode(df, ['education']) 
+    # 4. Imputaciones y conversión a INT
+    
+    # A. Imputación opcional de 'age' (mediana escalar) y conversión a INT solo si no hay NaN
+    if 'age' in df.columns:
+        if impute and df['age'].isnull().any():
+            age_median = df['age'].median()
+            df['age'] = df['age'].fillna(age_median)
+        if not df['age'].isnull().any():
+            df['age'] = df['age'].astype(int)
+
+    # B. Imputación por moda (solo 'education' en este punto, opcional)
+    if impute:
+        df = dc.impute_mode(df, ['education']) 
     
     # 5. CONVERSIÓN FINAL DE BINARIAS A INT
     for col in ['default', 'housing', 'loan']:
@@ -124,5 +129,11 @@ def clean_campaign_df(df_campaign_original):
     for c in ['lat', 'latitude', 'longitude', 'long']:
         if c in df.columns:
             df = df.drop(columns=c)
+
+    # 8. Normalizar nombres de columnas a snake_case para coherencia con config/features
+    try:
+        df = dc.clean_column_names(df, verbose=True)
+    except Exception:
+        pass
     
     return df
