@@ -475,7 +475,7 @@ def plot_segment_analysis(df, segment_col, target_col, title=None, figsize=(14, 
     return fig, ax
 
 
-def plot_economic_impact(df, economic_vars, target_col, title=None, figsize=(14, 8)):
+def plot_economic_impact(df, economic_vars, target_col, title=None, figsize=(14, 8), n_bins=5):
     """
     Genera análisis de impacto de variables económicas.
     
@@ -491,6 +491,8 @@ def plot_economic_impact(df, economic_vars, target_col, title=None, figsize=(14,
         Título del gráfico
     figsize : tuple
         Tamaño de la figura
+    n_bins : int
+        Número de bins para discretizar variables continuas (default: 5)
         
     Returns:
     --------
@@ -512,7 +514,7 @@ def plot_economic_impact(df, economic_vars, target_col, title=None, figsize=(14,
         df_temp = df_temp.dropna()
         
         # Crear bins
-        df_temp[f'{var}_bin'] = pd.qcut(df_temp[var], q=5, duplicates='drop')
+        df_temp[f'{var}_bin'] = pd.qcut(df_temp[var], q=n_bins, duplicates='drop')
         
         # Calcular tasas por bin
         stats = df_temp.groupby(f'{var}_bin', observed=False).agg(
