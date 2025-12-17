@@ -1,18 +1,18 @@
 # Core Data Science
-pandas==2.2.3
-numpy==2.1.3
+pandas==2.3.3
+numpy==2.3.5
 
 # Visualización
-matplotlib==3.9.2
+matplotlib==3.10.8
 seaborn==0.13.2
 
 # Jupyter
 jupyter==1.1.1
-ipykernel==6.29.5
-notebook==7.2.2
+ipykernel==7.1.0
+notebook==7.5.1
 
 # Procesamiento de Excel
 openpyxl==3.1.5
 
 # Utilidades
-python-dateutil==2.9.0
+python-dateutil==2.9.0.post0
