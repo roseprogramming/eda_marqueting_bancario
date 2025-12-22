@@ -67,7 +67,7 @@ Este proyecto siguió una metodología estructurada en 5 fases:
 
 ### 5. **Visualización y Documentación**
 
-- 7 gráficos clave (distribuciones, tasas, correlaciones)
+- 12 gráficos clave (distribuciones, tasas, correlaciones, análisis temporal, efectividad de campañas)
 - Informe ejecutivo con insights accionables
 - Documentación técnica del código
 
