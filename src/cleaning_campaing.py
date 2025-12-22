@@ -1,55 +1,42 @@
-# src/cleaning_campaing.py
-import pandas as pd
-import numpy as np
-import src.data_cleaning as dc
-"""
-Módulo: cleaning_campaign.py
-======================================================
-Módulo principal para la limpieza, transformación y preparación del DataFrame de campañas bancarias (`df_campaign`) para las etapas de análisis y modelado.
-------------------------------------------------------
-Este módulo está diseñado para:
-- **Limpieza y transformación estructurada** del DataFrame según especificaciones del proyecto (tipos, valores especiales, formato de fechas y variables categóricas).
-- **Normalización Temporal**: Extrae, limpia y tipa correctamente fechas, meses y años para análisis longitudinal y de estacionalidad.
-- **Corrección de Tipos Numéricos**: Corrige objetos mal tipados (ej. valores macroeconómicos) debido a separadores decimales incorrectos (comas).
-- **Gestión de Valores Especiales**: Recodifica marcadores como `999` en `pdays` y el target binario `y` (`yes`/`no` → `1`/`0`).
-- **Imputación de Valores Faltantes**: Aplica estrategias de imputación (mediana para numéricas, moda para categóricas) a columnas críticas.
-- **Asegurar Calidad**: Prepara un DataFrame estructuralmente correcto y listo para ser consumido por módulos de visualización y *machine learning*.
-------------------------------------------------------
-FUNCIONES DISPONIBLES EN ESTE MÓDULO:
-------------------------------------------------------
-1) clean_campaign_df(df_campaign_original)
-    - Función principal que aplica la secuencia completa de limpieza y transformación del DataFrame de la campaña bancaria.
-    - Pasos incluidos: corrección de separadores, conversión a `datetime`, recodificación de `pdays` y target `y`, imputación y tipado categórico.
-    - Argumentos:
-        df_campaign_original (pd.DataFrame): DataFrame original (sin modificar) con los datos de la campaña.
-    - Retorna: pd.DataFrame limpio y listo para análisis/modelado.
-------------------------------------------------------
-BUENAS PRÁCTICAS/TIPS:
-------------------------------------------------------
-- **Inmutabilidad:** La lógica de la función `clean_campaign_df` debe usar una copia (`df.copy()`) del DataFrame de entrada para no mutar el original.
-- **Validación:** Posterior a la limpieza, se recomienda la validación con `run_checks()` o una inspección visual para asegurar la calidad.
-- **Modularidad:** Para utilidades de limpieza más genéricas y reusables (ej. manejo de NaNs), basarse en el módulo `src.data_cleaning`.
-------------------------------------------------------
-EJEMPLO DE USO EN NOTEBOOK:
-------------------------------------------------------
-import cleaning_campaign as cc
-import pandas as pd
-# Suponiendo que df_campaign ya está cargado
 df_campaign_clean = cc.clean_campaign_df(df_campaign)
-print(df_campaign_clean.head())
 
-"""
+def clean_campaign_df(df_campaign_original, impute: bool = False):
+
+
+
+
+
+
+
+# src/cleaning_campaing.py
+# ======================================================
+# Módulo principal para la limpieza, transformación y preparación del DataFrame de campañas bancarias (`df_campaign`).
+#
+# Este módulo está diseñado para:
+# - Limpieza y transformación estructurada del DataFrame según especificaciones del proyecto.
+# - Normalización temporal: fechas, meses y años.
+# - Corrección de tipos numéricos y separadores decimales.
+# - Gestión de valores especiales y recodificación de variables clave.
+# - Imputación de valores faltantes y tipado categórico.
+# - Preparar un DataFrame listo para análisis y modelado.
+# ======================================================
+
+# Importación de librerías principales
+import pandas as pd  # Para manejo de DataFrames
+import numpy as np   # Para operaciones numéricas
+import src.data_cleaning as dc  # Utilidades de limpieza genéricas
 
 def clean_campaign_df(df_campaign_original, impute: bool = False):
     """
     Limpia y transforma el DataFrame de campañas bancarias (df_campaign).
     Permite desactivar imputaciones para EDA (impute=False por defecto).
-    Args:
+    Parámetros:
         df_campaign_original (pd.DataFrame): DataFrame original con datos de la campaña.
         impute (bool): Si True, aplica imputaciones (mediana/moda) antes de castear.
-    Returns:
+    Retorna:
         pd.DataFrame: DataFrame limpio y listo para análisis/modelado.
     """
+    # Crea una copia para no modificar el DataFrame original
     df = df_campaign_original.copy()
     
     # 1. Limpiar separadores decimales y convertir a float
@@ -59,13 +46,12 @@ def clean_campaign_df(df_campaign_original, impute: bool = False):
             # 1.1 Limpieza y conversión a FLOAT
             df[c] = df[c].astype(str).str.replace(',', '.', regex=False)
             df[c] = pd.to_numeric(df[c], errors='coerce')
-            
             # 1.2 Imputación opcional de NaNs (mediana)
             if impute and df[c].isnull().any():
                 median_val = df[c].median()
                 df[c] = df[c].fillna(median_val)
     
-    # 2. Parsear y convertir columna 'date' (SIN CAMBIOS)
+    # 2. Parsear y convertir columna 'date' (formato español)
     meses_es = {'enero': 1, 'febrero': 2, 'marzo': 3, 'abril': 4, 'mayo': 5, 'junio': 6,
                 'julio': 7, 'agosto': 8, 'septiembre': 9, 'octubre': 10, 'noviembre': 11, 'diciembre': 12}
     def parse_fecha_es(fecha):
@@ -79,7 +65,7 @@ def clean_campaign_df(df_campaign_original, impute: bool = False):
             return f"{anio}-{mes:02d}-{dia:02d}"
         except Exception:
             return np.nan
-            
+    # Si existe la columna 'date', la convierte a datetime y extrae mes y año
     if 'date' in df.columns:
         df['date'] = pd.to_datetime(df['date'].apply(parse_fecha_es), format='%Y-%m-%d', errors='coerce')
         df['contact_month'] = df['date'].dt.month.astype('Int64')
@@ -91,7 +77,7 @@ def clean_campaign_df(df_campaign_original, impute: bool = False):
     if 'pdays' in df.columns:
         df['previous_contact'] = (df['pdays'] < 999).astype(int)
         df.loc[df['pdays'] == 999, 'pdays'] = np.nan
-        
+    # Recodifica variables binarias mal tipadas
     for col in ['default', 'housing', 'loan']:
         if col in df.columns:
             df[col] = df[col].astype(str).str.split(',').str[0]
@@ -102,7 +88,6 @@ def clean_campaign_df(df_campaign_original, impute: bool = False):
         df = df.rename(columns={'id_': 'id'})
 
     # 4. Imputaciones y conversión a INT
-    
     # A. Imputación opcional de 'age' (mediana escalar) y conversión a INT solo si no hay NaN
     if 'age' in df.columns:
         if impute and df['age'].isnull().any():
@@ -110,12 +95,11 @@ def clean_campaign_df(df_campaign_original, impute: bool = False):
             df['age'] = df['age'].fillna(age_median)
         if not df['age'].isnull().any():
             df['age'] = df['age'].astype(int)
-
     # B. Imputación por moda (solo 'education' en este punto, opcional)
     if impute:
         df = dc.impute_mode(df, ['education']) 
-    
-    # 5. CONVERSIÓN FINAL DE BINARIAS A INT
+
+    # 5. Conversión final de binarias a INT
     for col in ['default', 'housing', 'loan']:
         if col in df.columns:
             df[col] = df[col].astype(int) 
@@ -124,16 +108,16 @@ def clean_campaign_df(df_campaign_original, impute: bool = False):
     cats = ['job','marital','education','contact_month','contact_year','default','housing','loan']
     cats = [c for c in cats if c in df.columns]
     df = dc.coerce_to_category(df, cats)
-    
+
     # 7. Eliminar columnas geográficas incorrectas (descontextualizadas)
     for c in ['lat', 'latitude', 'longitude', 'long']:
         if c in df.columns:
             df = df.drop(columns=c)
 
-    # 8. Normalizar nombres de columnas a snake_case para coherencia con config/features
+    # 8. Normalizar nombres de columnas a snake_case para coherencia
     try:
         df = dc.clean_column_names(df, verbose=True)
     except Exception:
         pass
-    
+    # Devuelve el DataFrame limpio y listo para análisis/modelado
     return df
