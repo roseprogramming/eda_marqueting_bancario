@@ -131,7 +131,7 @@ pip install -r requirements.txt
 Los datasets ya están incluidos en el repositorio.
 Abrir y ejecutar: notebooks/01_EDA_Analisis.ipynb
 
-## ⚡ Ejecutar Pipeline (Simple)
+## ⚡ Ejecutar Pipeline
 
 Desde terminal:
 
