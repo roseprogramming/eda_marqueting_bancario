@@ -369,11 +369,25 @@ def save_plot(filename, dpi=300, bbox_inches='tight'):
         bbox_inches (str): Ajuste de bordes ('tight' recomendado).
 
     Detalles:
-        - Crea la subcarpeta 'outputs' dentro de 'reports' si no existe.
+        - Busca la raíz del proyecto subiendo directorios hasta encontrar 'reports/'.
+        - Crea la subcarpeta 'outputs' si no existe.
         - Guarda el archivo y muestra la ruta completa.
     """
-    import os
-    os.makedirs('reports/outputs', exist_ok=True)
-    filepath = f'reports/outputs/{filename}'
-    plt.savefig(filepath, dpi=dpi, bbox_inches=bbox_inches)
-    print(f"✓ Gráfico guardado: {filepath}")
+    # Usa las importaciones globales de Path y plt
+    # Obtiene la ruta absoluta del archivo actual
+    current_path = Path(__file__).resolve()
+    # Busca la carpeta 'reports' subiendo en la jerarquía de carpetas
+    for parent in current_path.parents:
+        if (parent / 'reports').exists():
+            outputs_dir = parent / 'reports' / 'outputs'  # Carpeta destino
+            outputs_dir.mkdir(parents=True, exist_ok=True)  # Crea la carpeta si no existe
+            break
+    else:
+        # Si no encuentra la carpeta 'reports', lanza un error
+        raise FileNotFoundError("No se encontró la carpeta 'reports' en la jerarquía de directorios.")
+    # Construye la ruta final del archivo a guardar
+    output_path = outputs_dir / filename
+    # Guarda la figura actual en la ruta especificada
+    plt.savefig(output_path, dpi=dpi, bbox_inches=bbox_inches)
+    # Imprime la ruta donde se guardó el gráfico
+    print(f"Gráfico guardado en: {output_path}")
