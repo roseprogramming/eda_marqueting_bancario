@@ -152,7 +152,7 @@ def plot_categorical_rate(df, category_col, target_col, title=None, figsize=(12,
     df_temp = df_temp.dropna()
     
     # Agrupa por la categoría y calcula el total y éxitos (suma del target)
-    tasas = df_temp.groupby(category_col).agg(
+    tasas = df_temp.groupby(category_col, observed=True).agg(
         total=(target_col, 'count'),  # total de registros por categoría
         exitos=(target_col, 'sum')    # suma de éxitos (asume target binario 0/1)
     )
