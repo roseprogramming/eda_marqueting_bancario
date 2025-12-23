@@ -4,7 +4,7 @@ PIPELINE: Carga → Limpia → Normaliza → Une → Exporta
 ======================================================
 Script principal para la preparación y consolidación de datos del proyecto EDA Marketing Bancario.
 
-Este pipeline automatiza el flujo de trabajo que antes se hacía manualmente en el notebook, asegurando:
+Este pipeline automatiza el flujo de trabajo que se hacía manualmente en el notebook en su primera versión, asegurando:
 - Consistencia y reproducibilidad en la limpieza y unión de datos.
 - Mantenimiento más sencillo y separación de responsabilidades.
 
