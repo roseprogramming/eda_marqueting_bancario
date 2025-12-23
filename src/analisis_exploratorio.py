@@ -23,16 +23,10 @@ __all__ = [
      "report_structure",
      "get_categorical_columns",
      "categorical_summary",
+     "hay_outliers",
+     "porcentaje_outliers"
 ]
 
-
-
-__all__ = [
-    "analisis_exploratorio",
-    "report_structure",
-    "get_categorical_columns",
-    "categorical_summary",
-]
 
 
 def report_structure(df: pd.DataFrame, show_head: int = 5) -> Dict:
@@ -207,3 +201,58 @@ def calcular_tasa_proporciones(df: pd.DataFrame, variable: str) -> pd.DataFrame:
     ) * 100
     # Devuelve el DataFrame resultado
     return resultado.reset_index(drop=True)
+
+
+def hay_outliers(serie):
+    """
+    Detecta si existen outliers en una serie numérica usando el criterio del rango intercuartílico (IQR).
+
+    Un valor se considera outlier si está por debajo de Q1 - 1.5*IQR o por encima de Q3 + 1.5*IQR,
+    donde Q1 es el primer cuartil (percentil 25), Q3 es el tercer cuartil (percentil 75) e IQR = Q3 - Q1.
+
+    Parámetros:
+        serie (pd.Series): Serie numérica sobre la que se desea detectar outliers.
+
+    Retorna:
+        bool: True si existe al menos un outlier en la serie, False si no hay outliers.
+
+    Ejemplo:
+        >>> import pandas as pd
+        >>> s = pd.Series([1, 2, 2, 3, 4, 100])
+        >>> hay_outliers(s)
+        True
+    """
+    q1 = serie.quantile(0.25)  # Primer cuartil (25%)
+    q3 = serie.quantile(0.75)  # Tercer cuartil (75%)
+    iqr = q3 - q1  # Rango intercuartílico (IQR)
+    lower = q1 - 1.5 * iqr  # Límite inferior para considerar outlier
+    upper = q3 + 1.5 * iqr  # Límite superior para considerar outlier
+    # Devuelve True si existe al menos un valor fuera de los límites definidos
+    return ((serie < lower) | (serie > upper)).any()
+
+
+def porcentaje_outliers(serie):
+    """
+    Calcula el porcentaje de outliers en una serie numérica usando el criterio del rango intercuartílico (IQR).
+
+    Un valor se considera outlier si está por debajo de Q1 - 1.5*IQR o por encima de Q3 + 1.5*IQR,
+    donde Q1 es el primer cuartil (percentil 25), Q3 es el tercer cuartil (percentil 75) e IQR = Q3 - Q1.
+
+    Parámetros:
+        serie (pd.Series): Serie numérica sobre la que se desea calcular el porcentaje de outliers.
+
+    Retorna:
+        float: Porcentaje de valores considerados outliers respecto al total de la serie.
+
+    Ejemplo:
+        >>> import pandas as pd
+        >>> s = pd.Series([1, 2, 2, 3, 4, 100])
+        >>> porcentaje_outliers(s)
+        16.666666666666668
+    """
+    q1 = serie.quantile(0.25)  # Primer cuartil
+    q3 = serie.quantile(0.75)  # Tercer cuartil
+    iqr = q3 - q1  # Rango intercuartílico
+    lower = q1 - 1.5 * iqr  # Límite inferior
+    upper = q3 + 1.5 * iqr  # Límite superior
+    return 100 * ((serie < lower) | (serie > upper)).sum() / len(serie)  # % de outliers respecto al total
