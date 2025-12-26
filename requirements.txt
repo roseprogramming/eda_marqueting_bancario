@@ -16,4 +16,10 @@ openpyxl==3.1.5
 
 # Utilidades
 python-dateutil==2.9.0.post0
-scipy
+scipy==1.13.0
+
+# Estadística y modelado
+statsmodels==0.14.1
+
+# Los siguientes módulos se usan en el notebook pero no requieren instalación:
+# - calendar (librería estándar de Python)

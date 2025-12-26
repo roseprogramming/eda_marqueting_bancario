@@ -24,7 +24,7 @@ Hallazgos de alto nivel:
 
 El análisis detallado y salidas textuales se encuentran en:
 
-- reports/outputs/analisis_demografico_completo.txt
+- reports/outputs/analisis_EDA_completo.txt
 
 ---
 
@@ -40,7 +40,7 @@ Transformaciones principales:
 - Normalización de nombres a snake_case (dc.clean_column_names).
 - Conversión de tipos y estandarización de separadores decimales.
 - Recodificación de y (yes/no → 1/0) y creación de previous_contact (pdays != 999).
-- Unificación y join por id para construir df_perfil_cliente.
+- Unificación y join por id para construir el dataset maestro df_perfil_cliente.
 - Variables derivadas: antiguedad_años, segmento_edad.
 
 Detalles técnicos completos:
@@ -80,37 +80,37 @@ El análisis incluye 12 visualizaciones que cubren distribuciones, tasas de conv
 
 ### Distribución de Edad
 
-![Distribución de Edad](../outputs/01_distribucion_edad.png)
+![Distribución de Edad](../outputs/06_hist_age_comparativo.png)
 
 Los clientes presentan una distribución roughly normal alrededor de los 40 años. Los segmentos de mayor edad (56-65) muestran tasas de conversión superiores, sugiriendo que la madurez del cliente correlaciona con la receptividad.
 
 ### Distribución de Ingresos
 
-![Distribución de Ingresos](../outputs/02_distribucion_ingresos.png)
+![Distribución de Ingresos](../outputs/07_hist_income_comparativo.png)
 
 La distribución de ingresos es aproximadamente uniforme, sin patrones claros de discriminación. Esta característica confirma hallazgos previos: el income tiene bajo poder predictivo en este contexto.
 
 ### Tasa de Conversión por Ocupación
 
-![Tasa de Conversión por Ocupación](../outputs/03_tasa_por_ocupacion.png)
+![Tasa de Conversión por Ocupación](../outputs/09_tasas_exito_categoricas_lado_a_lado.png)
 
 **Hallazgo destacado:** Estudiantes y retirados presentan tasas superiores al 25%, mientras que trabajadores manuales ("blue-collar") y servicios están por debajo de la media (11.3%). Los directivos y profesionales también muestran tasas altas (~14%).
 
 ### Tasa de Conversión por Educación
 
-![Tasa de Conversión por Educación](../outputs/04_tasa_por_educacion.png)
+![Tasa de Conversión por Educación](../outputs/09_tasas_exito_categoricas_lado_a_lado.png)
 
 Mayor nivel educativo correlaciona positivamente con conversión. Clientes con educación superior presentan tasas del 22% vs 7-8% en niveles básicos. Recomendación: priorizar segmentos educados en campañas.
 
 ### Tasa de Conversión por Estado Civil
 
-![Tasa de Conversión por Estado Civil](../outputs/05_tasa_por_estado_civil.png)
+![Tasa de Conversión por Estado Civil](../outputs/09_tasas_exito_categoricas_lado_a_lado.png)
 
 Clientes solteros (single) presentan la tasa más alta (13.9%). Casados y divorciados están alrededor de la media (10%). Estado civil es un segmentador débil comparado con edad/educación.
 
 ### Matriz de Correlaciones
 
-![Matriz de Correlaciones](../outputs/06_matriz_correlaciones.png)
+![Matriz de Correlaciones](../outputs/10_matriz_correlacion_numericas.png)
 
 **Hallazgos de colinealidad:**
 
@@ -120,7 +120,7 @@ Clientes solteros (single) presentan la tasa más alta (13.9%). Casados y divorc
 
 ### Distribución de Duración de Llamada
 
-![Boxplot de Duration](../outputs/07_boxplot_duration.png)
+![Boxplot de Duration](../outputs/11_factores_campana_duracion_vs_poutcome.png)
 
 **CRÍTICO - Data Leakage:** Clientes que suscribieron (y=1) tienen duración 2.5× mayor que rechazantes (552s vs 220s). Esta variable NO debe usarse en modelos previos al contacto; es perfecta información del futuro.
 
@@ -208,6 +208,7 @@ Ajustar umbrales con base en costes y capacidad operativa (curvas de ganancias y
 - Binning óptimo de age y antiguedad_años (WoE/Monotonicidad).
 - Variables de intensidad: ratio_contacts (campaign/pdays, cuando aplique).
 - Encoding robusto para alta cardinalidad (target/GLMM encoding con CV interna).
+- Revisión de multicolinealidad mediante VIF y, si persisten correlaciones elevadas, evaluar la aplicación de Análisis de Componentes Principales (PCA) para reducir la dimensionalidad y mejorar la robustez del modelo.
 
 2. Modelado
 
