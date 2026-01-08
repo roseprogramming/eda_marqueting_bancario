@@ -2,46 +2,49 @@
 
 Proyecto: Predicción de suscripción a depósitos a plazo  
 Periodo analizado: 2012–2014  
-Fecha de actualización: 12/12/2025
+Fecha de actualización: 08/01/2026
 
 ---
 
 ## 1) Resumen ejecutivo
 
-El análisis exploratorio consolida un “Master Dataset” con información de:
+El análisis exploratorio consolidó un "Master Dataset" de **43,000 registros** con **30 variables** que integra:
 
-- Perfil del cliente (edad, educación, ocupación, estado civil).
-- Historial y contexto de campaña (contacto, resultado previo, frecuencia).
-- Indicadores macro (emp_var_rate, euribor3m, cons_price_idx).
-- Derivadas clave (antiguedad_años, segmento_edad, previous_contact).
+- **Perfil demográfico:** edad, educación, ocupación, estado civil
+- **Historial de campaña:** contacto previo, resultado anterior, frecuencia
+- **Variables macroeconómicas:** emp_var_rate, euribor3m, cons_price_idx, nr_employed
+- **Variables derivadas:** antiguedad_años, segmento_edad, previous_contact
 
-Hallazgos de alto nivel:
+### Hallazgos clave cuantificados:
 
-- El resultado de campaña previa (poutcome) discrimina fuertemente la probabilidad de suscripción.
-- La antigüedad del cliente y la edad muestran patrones consistentes (segmentos mayores y con antigüedad baja-moderada responden mejor).
-- Income y composición del hogar aportan señal débil en este contexto.
-- duration es data leakage y no debe usarse en modelos de scoring pre-contacto.
+**Variables con mayor poder discriminatorio:**
+- **poutcome=success:** 65.3% tasa de conversión (vs 8.8% sin historial) → **+647% uplift**
+- **Segmento de edad 65+:** 46.0% conversión (vs 8.7% segmento 46-55) → **+429% uplift**
+- **Ocupación estudiante:** 31.3% conversión (vs 6.9% blue-collar) → **+354% uplift**
+- **Duration (leakage):** 2.5x mayor en conversiones → **+150% diferencia** NO USAR
 
-El análisis detallado y salidas textuales se encuentran en:
+**Variables con señal débil-nula:**
+- **Income:** ratio 0.99x (prácticamente idéntico entre grupos)
+- **Antigüedad:** ratio 0.84x (ligera ventaja en clientes nuevos)
+- **Edad:** ratio 1.02x (diferencia marginal del 2%)
 
-- reports/outputs/analisis_EDA_completo.txt
+El análisis completo se encuentra en [reports/outputs/analisis_EDA_completo.txt](../outputs/analisis_EDA_completo.txt)
 
----
+**Datasets origen:**
+- `data/raw/bank-additional.csv` → 43,000 registros de campaña
+- `data/raw/customer-details.xlsx` → 43,170 registros demográficos (2012-2014)
 
-## 2) Proceso de limpieza (resumen)
+**Transformaciones aplicadas:**
+- Normalización PEP 8 (snake_case) mediante módulo `data_cleaning.py`
+- Corrección de tipos (numéricas mal tipadas como object, age float→int64)
+- Recodificación de target: `y` (yes/no → 1/0)
+- Creación de variables derivadas: `previous_contact` (pdays != 999), `antiguedad_años`, `segmento_edad`
+- Tratamiento de valores faltantes por moda/mediana
+- Integración mediante **inner join** por `id` → dataset maestro `df_perfil_cliente.csv`
 
-Origen de datos:
+**Resultado final:** 43,000 registros × 30 variables correctamente tipadas
 
-- data/raw/bank-additional.csv (campaña)
-- data/raw/customer-details.xlsx (2012, 2013, 2014)
-
-Transformaciones principales:
-
-- Normalización de nombres a snake_case (dc.clean_column_names).
-- Conversión de tipos y estandarización de separadores decimales.
-- Recodificación de y (yes/no → 1/0) y creación de previous_contact (pdays != 999).
-- Unificación y join por id para construir el dataset maestro df_perfil_cliente.
-- Variables derivadas: antiguedad_años, segmento_edad.
+📄 Proceso técnico detallado: [informe_preliminar.md](archive/informe_preliminar.md).
 
 Detalles técnicos completos:
 
@@ -74,108 +77,163 @@ Detalles técnicos completos:
 
 ---
 
-## 3.5) Visualizaciones Clave
+## 3.5) Visualizaciones clave del análisis
 
-El análisis incluye 12 visualizaciones que cubren distribuciones, tasas de conversión, correlaciones, efectividad temporal y segmentación:
+El EDA generó **11 visualizaciones** que cubren distribuciones, correlaciones, patrones temporales y segmentación. A continuación se destacan las más relevantes:
 
-### Distribución de Edad
+### 1. Pairplot de Variables Numéricas
+
+![Pairplot](../outputs/01_pairplot_numericas.png)
+
+Análisis de relaciones bivariadas entre `age`, `income` y `tenure_years`. Se confirma la **ausencia de correlaciones fuertes** entre variables numéricas y la variable objetivo `y`.
+
+### 2. Distribución de Edad por Target
 
 ![Distribución de Edad](../outputs/06_hist_age_comparativo.png)
 
-Los clientes presentan una distribución roughly normal alrededor de los 40 años. Los segmentos de mayor edad (56-65) muestran tasas de conversión superiores, sugiriendo que la madurez del cliente correlaciona con la receptividad.
+Distribución aproximadamente normal centrada en 40 años. **Hallazgo:** diferencia marginal (ratio 1.02x) entre grupos y=0/y=1, confirmando que la edad per se tiene bajo poder discriminatorio.
 
-### Distribución de Ingresos
+### 3. Distribución de Ingresos por Target
 
 ![Distribución de Ingresos](../outputs/07_hist_income_comparativo.png)
 
-La distribución de ingresos es aproximadamente uniforme, sin patrones claros de discriminación. Esta característica confirma hallazgos previos: el income tiene bajo poder predictivo en este contexto.
+Distribución uniforme sin patrones claros. **Hallazgo crítico:** ratio 0.99x (prácticamente idéntico) → `income` **no discrimina** entre conversores y no conversores.
 
-### Tasa de Conversión por Ocupación
+### 4. Tasas de Conversión por Variables Categóricas
 
-![Tasa de Conversión por Ocupación](../outputs/09_tasas_exito_categoricas_lado_a_lado.png)
+![Tasas Categóricas](../outputs/09_tasas_exito_categoricas_lado_a_lado.png)
 
-**Hallazgo destacado:** Estudiantes y retirados presentan tasas superiores al 25%, mientras que trabajadores manuales ("blue-collar") y servicios están por debajo de la media (11.3%). Los directivos y profesionales también muestran tasas altas (~14%).
+**Insights cuantificados:**
+- **Ocupación:** student (31.3%) vs blue-collar (6.9%) → **gap de 4.5x**
+- **Educación:** illiterate (22.2%) vs basic.9y (7.8%) → **gap de 2.8x**
+- **Estado civil:** single (13.9%) vs divorced (10.2%) → gap moderado de 1.4x
+- **Edad:** 65+ (46.0%) vs 46-55 (8.7%) → **gap de 5.3x** (mayor discriminador demográfico)
 
-### Tasa de Conversión por Educación
+### 5. Matriz de Correlaciones
 
-![Tasa de Conversión por Educación](../outputs/09_tasas_exito_categoricas_lado_a_lado.png)
+![Matriz de Correlación](../outputs/10_matriz_correlacion_numericas.png)
 
-Mayor nivel educativo correlaciona positivamente con conversión. Clientes con educación superior presentan tasas del 22% vs 7-8% en niveles básicos. Recomendación: priorizar segmentos educados en campañas.
+**Hallazgo de multicolinealidad:** Variables macroeconómicas (`emp_var_rate`, `cons_price_idx`, `euribor3m`, `nr_employed`) presentan correlaciones **>0.7**, indicando redundancia. **Recomendación:** seleccionar 1-2 representativas o aplicar PCA.
 
-### Tasa de Conversión por Estado Civil
+### 6. Evolución Temporal
 
-![Tasa de Conversión por Estado Civil](../outputs/09_tasas_exito_categoricas_lado_a_lado.png)
+![Temporal](../outputs/03_temporal_registros_tasa_periodo.png)
 
-Clientes solteros (single) presentan la tasa más alta (13.9%). Casados y divorciados están alrededor de la media (10%). Estado civil es un segmentador débil comparado con edad/educación.
+Análisis de estacionalidad por periodo. Se observan variaciones en tasa de éxito según momento de campaña, sugiriendo **influencia de factores macro y estacionales**.
 
-### Matriz de Correlaciones
+### 7. Factores de Campaña: Duration y Poutcome
 
-![Matriz de Correlaciones](../outputs/10_matriz_correlacion_numericas.png)
+![Factores Campaña](../outputs/11_factores_campana_duracion_vs_poutcome.png)
 
-**Hallazgos de colinealidad:**
+**Dos hallazgos críticos:**
+1. **Duration (data leakage):** boxplot muestra que llamadas exitosas duran 2.5x más → información solo disponible post-contacto
+2. **Poutcome (predictor #1):** pie chart muestra distribución de casos. Success representa solo 3.3% del total pero alcanza 65.3% de conversión
 
-- Variables macroeconómicas presentan alta correlación entre sí (emp_var_rate, cons_price_idx, euribor3m, nr_employed: correlaciones > 0.7)
-- Esto sugiere que podrían ser redundantes; considerar PCA o selección de características
-- Variables demográficas (age, income, familia) tienen baja correlación con target, confirmando baja señal predictiva
+### 8. Análisis por Mes de Contacto
 
-### Distribución de Duración de Llamada
+![Contact Month](../outputs/04_temporal_registros_tasa_contact_month.png)
 
-![Boxplot de Duration](../outputs/11_factores_campana_duracion_vs_poutcome.png)
-
-**CRÍTICO - Data Leakage:** Clientes que suscribieron (y=1) tienen duración 2.5× mayor que rechazantes (552s vs 220s). Esta variable NO debe usarse en modelos previos al contacto; es perfecta información del futuro.
-
-### Evolución Temporal de la Conversión
-
-![Evolución Temporal](../outputs/08_evolucion_temporal.png)
-
-La tasa de conversión muestra variabilidad a lo largo del tiempo, con ciertos periodos de mayor y menor éxito. Esto sugiere la importancia de factores estacionales y macroeconómicos en el comportamiento del cliente. Los picos y valles pueden correlacionar con campañas específicas o condiciones económicas.
-
-### Efectividad de Campañas por Número de Contactos
-
-![Efectividad de Campañas](../outputs/09_efectividad_campanas.png)
-
-**Hallazgo operativo crítico:** La tasa de conversión muestra un patrón de rendimientos decrecientes. El primer contacto tiene la mayor efectividad, y múltiples contactos (>3) pueden indicar saturación del cliente. Recomendación: optimizar frecuencia de contacto para maximizar ROI.
-
-### Impacto del Resultado de Campaña Anterior
-
-![Tasa por Poutcome](../outputs/10_tasa_por_poutcome.png)
-
-**Predictor más fuerte identificado:** Clientes con éxito previo (poutcome=success) muestran tasas de conversión dramáticamente superiores (~65%) comparado con clientes sin historial o con fracaso previo (<10%). Este es el segmento prioritario para campañas futuras.
-
-### Impacto de Variables Macroeconómicas
-
-![Impacto Económico](../outputs/11_impacto_economico.png)
-
-Los indicadores económicos muestran relación con la propensión a suscribir. Tasas de empleo, índices de precios y euribor revelan patrones de sensibilidad del cliente al contexto económico. Variables altamente correlacionadas entre sí sugieren considerar selección de features o PCA.
-
-### Análisis de Segmentos de Edad
-
-![Segmentos de Edad](../outputs/12_segmentos_edad.png)
-
-El análisis detallado por segmento de edad confirma que grupos de mayor edad (51+) presentan mejores tasas de conversión. El segmento 61+ muestra la tasa más alta, aunque con menor volumen. Los grupos jóvenes (18-30) tienen baja conversión pero alto volumen, representando una oportunidad si se optimiza el mensaje.
+Evaluación de efectividad por mes de contacto. Identifica ventanas temporales óptimas para campañas futuras.
 
 ---
 
-## 4) Data leakage
+## 4) Data leakage crítico
 
-Variable afectada:
+### Variable afectada: `duration`
 
-- duration: solo se conoce tras finalizar la llamada.
+**Evidencia cuantificada:**
+- Llamadas exitosas (y=1): media 551.6 segundos
+- Llamadas fallidas (y=0): media 220.4 segundos
+- **Ratio:** 2.50x → las exitosas duran **150.2% más tiempo**
 
-Implicación:
+**Naturaleza del leakage:**
+- `duration` solo se conoce **después** de finalizar la llamada
+- Es un **efecto**, no una causa de la suscripción
+- Usar esta variable en modelos predictivos contaminaría las predicciones con información del futuro
 
-- No usar duration en modelos de scoring previos al contacto.
-- Útil para análisis post-mortem (optimización de guiones y tiempos de llamada).
+**Implicaciones operativas:**
+### 5.1 Variables prioritarias (alto poder predictivo)
 
----
+**Tier 1 - Imprescindibles:**
+- ✅ `poutcome` → **+647% uplift** en success vs nonexistent
+- ✅ `age_group` (derivada) → **+429% uplift** en 65+ vs 46-55
+- ✅ `job` → **+354% uplift** en student vs blue-collar
+- ✅ `education` → **+185% uplift** en superior vs básica
 
-## 5) Recomendaciones para modelado
+**Tier 2 - Complementarias:**
+- `marital`, `contact`, `campaign`, `previous_contact`
+- Variables temporales: `contact_month`, `contact_day_of_week`
+- 1-2 indicadores macro: `euribor3m` o `emp_var_rate` (elegir uno por colinealidad)
 
-Conjunto sugerido de variables (ejemplo base):
+### 5.2 Variables a excluir
 
-- Demográficas: age, education, job, marital
-- Campaña: poutcome, contact, campaign, previous_contact
-- Temporales: contact_month, contact_day_of_week
+❌ **Por data leakage:**
+- `duration` → conocida solo post-contacto
+
+❌ **Por falta de señal:**
+- `income` → ratio 0.99x (sin discriminación)
+- `kidhome`, `teenhome` → señal esperada baja
+
+❌ **Por multicolinealidad:**
+- Reducir grupo macro de 4 a 1-2 variables (VIF > 10 detectado)
+
+### 5.3 Feature engineering sugerido
+
+**Transformaciones:**
+- Binning óptimo de `age` mediante WoE (Weight of Evidence)
+- Target encoding para `job` y `education` (con CV interna para evitar leakage)
+- Variables de interacción: `poutcome × age_group`, `job × education`
+
+**Tratamiento de desbalanceo:**
+- Clase minoritaria: 11.3% (y=1)
+- Técnicas: SMOTE, ADASYN o ajuste de pesos de clase
+- Validar con PR-AUC además dbasada en datos
+
+### 🎯 Alta prioridad (conversión esperada >30%)
+**Perfil:** `poutcome=success` + `age_group=65+` + `job=student/retired`
+- **Tasa estimada:** 40-65%
+- **Volumen:** ~1,500-2,000 leads (3.5% del total)
+- **ROI esperado:** Alto (baja inversión, alta conversión)
+
+### 📊 Media-alta prioridad (conversión esperada 15-30%)
+**Perfil:** `poutcome=nonexistent` + `education=university` + `age=51-65`
+- **Tasa estimada:** 15-25%
+- **Volumen:** ~8,000-12,000 leads (20% del total)
+### 7.1 Completar análisis temporal ⏳
+**Estado:** Variables guardadas pero no incorporadas en informe
+- Incorporar hallazgos de `temporal_mes`, `temporal_contact_month`, `temporal_contact_year`
+- Analizar estacionalidad y efectividad por periodos
+- Actualizar sección 3.3 del informe
+
+### 7.2 Feature engineering
+- ✅ Binning óptimo de `age` mediante WoE/Monotonicidad
+- ✅ Target encoding para categóricas de alta cardinalidad
+- ✅ Variables de interacción: `poutcome × age_group`
+- ✅ Reducir multicolinealidad: seleccionar 1-2 indicadores macro o aplicar PCA
+
+### 7.3 Modelado
+**Baseline:**
+- Logistic Regression (interpretabilidad y explicabilidad)
+
+**Modelos avanzados:**
+- Random Forest (feature importance automático)
+- XGBoost/LightGBM (state-of-the-art para tabular)
+- Búsqueda de hiperparámetros con Optuna/GridSearchCV
+
+**Estrategia de validación:**
+- Split temporal: train (2012-2013) → test (2014)
+- CV estratificado 5-fold manteniendo proporción 11.3%
+
+### 7.4 Evaluación y análisis de negocio
+- Matrices de confusión segmentadas por perfil
+- Curvas de lift y ganancia para ROI estimado
+- Análisis de umbral óptimo según coste/beneficio
+- Dashboard interactivo de scoring (Streamlit)
+
+### 7.5 Despliegue
+- Pipeline reproducible con versionado (MLflow/DVC)
+- API de scoring (FastAPI)
+- Monitoreo de drift en producción
 - Macros: emp_var_rate, euribor3m, cons_price_idx
 - Derivadas: antiguedad_años
 
@@ -189,54 +247,57 @@ Buenas prácticas:
 - Revisión de colinealidad (VIF) en indicadores macro.
 - Validación estratificada y seguimiento de métricas sensibles a clase (AUC, Recall, Precision, PR-AUC).
 
----
+### Notebooks de análisis
+- **Principal:** `notebooks/01_EDA_Analisis_copy.ipynb`
+  - BLOQUE 1: Configuración y sistema DualOutput
+  - BLOQUE 2: Carga y preparación de datos
+  - BLOQUE 3: EDA completo con 11 visualizaciones
+    - 3.1: Inicialización y variables derivadas
+    - 3.2: Pairplot variables numéricas
+    - 3.3: Análisis temporal (3 variables)
+    - 3.4: Variables numéricas (age, income, tenure_years)
+    - 3.5: Variables categóricas (job, marital, age_group, education)
+    - 3.6: Correlaciones y VIF
+    - 3.7: Factores de campaña (duration, poutcome)
+    - 3.8: Resumen ejecutivo y guardado
 
-## 6) Segmentación operativa (orientativa)
+### Código fuente
+- `src/pipeline.py` → Pipeline ETL completo (9 pasos)
+- `src/data_cleaning.py` → Limpieza de customer details
+- `src/cleaning_campaing.py` → Limpieza de campaña
+- `src/analisis_exploratorio.py` → Funciones EDA
+- `src/plotting.py` → Visualizaciones y guardado
 
-- Alta prioridad: clientes con éxito previo (poutcome=success), edad media-alta, antigüedad < 4 años.
-- Media prioridad: perfiles profesionales sin contacto previo o con resultado neutro.
-- Baja prioridad: segmentos jóvenes con histórico de failure reciente.
+### Datasets procesados (`data/processed/`)
+- `df_campaign_clean.csv` → 43,000 × 24 variables limpias
+- `df_customer_details.csv` → 43,170 × 7 variables consolidadas
+- `df_perfil_cliente.csv` → **43,000 × 30 variables** (dataset maestro)
 
-Ajustar umbrales con base en costes y capacidad operativa (curvas de ganancias y lift).
+### Visualizaciones generadas (`reports/outputs/`)
+**11 gráficos PNG** numerados 01-11:
+1. Pairplot numéricas
+2. Scatter age vs income
+3. Temporal registros/tasa periodo
+4. Temporal contact_month
+5. Temporal contact_year
+6. Histograma age comparativo
+7. Histograma income comparativo
+8. Histograma antigüedad comparativo
+9. Tasas categóricas lado a lado
+10. Matriz correlación
+11. Factores campaña (duration + poutcome)
 
----
+### Informes y documentación
+- `reports/outputs/analisis_EDA_completo.txt` → Resumen cuantitativo (13 variables analizadas)
+- `reports/documentacion/informe_ejecutivo.md` → Este documento
+- `reports/documentacion/archive/informe_preliminar.md` → Proceso técnico de limpieza
 
-## 7) Próximos pasos
-
-1. Feature engineering
-
-- Binning óptimo de age y antiguedad_años (WoE/Monotonicidad).
-- Variables de intensidad: ratio_contacts (campaign/pdays, cuando aplique).
-- Encoding robusto para alta cardinalidad (target/GLMM encoding con CV interna).
-- Revisión de multicolinealidad mediante VIF y, si persisten correlaciones elevadas, evaluar la aplicación de Análisis de Componentes Principales (PCA) para reducir la dimensionalidad y mejorar la robustez del modelo.
-
-2. Modelado
-
-- Baselines: Logistic Regression (interpretabilidad).
-- Árboles/Boosting: Random Forest, XGBoost/LightGBM (tabular).
-- Búsqueda de hiperparámetros con validación cruzada estratificada.
-
-3. Evaluación y despliegue
-
-- Matrices de confusión por segmento y umbral optimizado por coste.
-- Curvas de ganancias y uplift para priorización operativa.
-- Versionado del pipeline y endpoints de scoring (FastAPI) + dashboard (Streamlit).
-
----
-
-## 8) Trazabilidad y artefactos
-
-- Notebook principal: notebooks/01_EDA_Analisis.ipynb
-  - BLOQUE 1: Importación y Configuración (1.1-1.5)
-  - BLOQUE 2: Carga y Preparación de Datos (2.1-2.4)
-  - BLOQUE 3: Visualizaciones Interactivas (3.1-3.4)
-  - BLOQUE 4: EDA - Análisis Exploratorio (4.1-4.2)
-- Pipeline ETL: src/pipeline.py (9 pasos)
-- Datasets procesados: data/processed/
-  - df_campaign_clean.csv
-  - df_customer_details.csv
-  - df_perfil_cliente.csv
-- Salidas de análisis: reports/outputs/analisis_demografico_completo.txt
-- Detalles técnicos: reports/documentacion/archive/informe_preliminar.md
+### Métricas de análisis
+- **Total variables analizadas:** 13
+- **Variables temporales:** 3
+- **Variables numéricas:** 3
+- **Variables categóricas:** 4
+- **Factores campaña:** 2
+- **Visualizaciones:** 11
 
 ---

@@ -303,6 +303,73 @@ def plot_boxplot_by_target(df, numeric_col, target_col, title=None, figsize=(8, 
 # FUNCIONES AUXILIARES
 # =============================================================================
 
+def plot_nulls_and_outliers(df, nulos_plot, vars_con_outliers):
+    """
+    Visualiza el porcentaje de valores nulos y los outliers de variables numéricas en un DataFrame.
+    Genera una figura con dos subplots:
+        (1) Barplot horizontal de porcentaje de nulos por variable (solo variables con nulos)
+        (2) Boxplots de variables numéricas con outliers detectados
+
+    Debe recibirse desde el notebook:
+        - df (pd.DataFrame): DataFrame fuente de datos (para graficar boxplots)
+        - nulos_plot (pd.Series): Porcentaje de nulos por variable (solo variables con nulos)
+        - vars_con_outliers (list of str): Lista de variables numéricas con outliers detectados
+        - figsize (tuple, opcional): Tamaño de la figura.
+
+    Ejemplo de uso en notebook:
+        porcentaje_nulos = df.isnull().mean().sort_values(ascending=False) * 100
+        nulos_plot = porcentaje_nulos[porcentaje_nulos > 0].sort_values()
+        vars_con_outliers = [var for var in vars_numericas if hay_outliers(df[var])]
+        pl.plot_nulls_and_outliers(df, nulos_plot, vars_con_outliers)
+    """
+    # -------------------------------------------------------------------------
+    # Configuración de la figura y subplots
+    # -------------------------------------------------------------------------
+    n_nulos = max(1, len(nulos_plot))  # Número de variables con nulos (mínimo 1)
+    n_out = max(1, len(vars_con_outliers))  # Número de variables con outliers (mínimo 1)
+    fig_width = max(8, 2.5 * max(n_nulos, n_out))  # Ancho dinámico
+    subplot_height = 6  # Altura fija por subplot
+    fig, axes = plt.subplots(2, 1, figsize=(fig_width, subplot_height*2), gridspec_kw={'height_ratios': [1, 1]})  # Dos subplots verticales
+
+    # -------------------------------------------------------------------------
+    # Subplot 1: Barplot horizontal de porcentaje de nulos
+    # -------------------------------------------------------------------------
+    if len(nulos_plot) > 0:
+        nulos_df = nulos_plot.reset_index()  # Convierte el Series en DataFrame para graficar
+        nulos_df['Variable'] = nulos_df['index']  # Renombra la columna de índice a 'Variable'
+        nulos_df['hue'] = nulos_df['index']  # Crea una columna para asignar un color único a cada variable
+        color_palette_nulos = sns.color_palette("pastel", len(nulos_df))  # Paleta de colores pastel para las barras
+        # Dibuja el barplot horizontal de porcentaje de nulos
+        sns.barplot(y="Variable", x=0, data=nulos_df, hue="hue", dodge=False, palette=color_palette_nulos, ax=axes[0], legend=False)
+        axes[0].set_xlabel('% de nulos')  # Etiqueta del eje X
+        axes[0].set_ylabel('Variable')  # Etiqueta del eje Y
+        axes[0].set_title('Porcentaje de valores nulos por variable (>0%)')  # Título del gráfico
+    else:
+        axes[0].text(0.5, 0.5, 'No hay valores nulos', ha='center', va='center', fontsize=12)  # Mensaje si no hay nulos
+        axes[0].set_axis_off()  # Oculta el subplot si no hay nulos
+
+    # ------------------------------------------------------------------------- 
+    # Subplot 2: Boxplots de variables numéricas con outliers
+    # -------------------------------------------------------------------------
+    if vars_con_outliers:
+        df_long = df[vars_con_outliers].melt(var_name='Variable', value_name='Valor')  # Convierte a formato largo para boxplot
+        df_long['hue'] = df_long['Variable']  # Crea columna para color único por variable
+        color_palette = sns.color_palette("pastel", len(vars_con_outliers))  # Paleta pastel para boxplots
+        # Dibuja los boxplots de cada variable con outliers
+        sns.boxplot(x='Variable', y='Valor', data=df_long, hue='hue', dodge=False, palette=color_palette, ax=axes[1], order=vars_con_outliers, legend=False)
+        axes[1].set_xlabel('Variable')  # Etiqueta eje X
+        axes[1].set_ylabel('Valor')  # Etiqueta eje Y
+        axes[1].set_title('Boxplots de variables numéricas con outliers detectados')  # Título del gráfico
+        if len(vars_con_outliers) > 8:
+            axes[1].tick_params(axis='x', rotation=45)  # Rota etiquetas si hay muchas variables
+    else:
+        axes[1].text(0.5, 0.5, 'No se detectaron outliers en las variables numéricas.', ha='center', va='center', fontsize=12)  # Mensaje si no hay outliers
+        axes[1].set_axis_off()  # Oculta el subplot si no hay outliers
+
+    plt.tight_layout()  # Ajusta el layout para evitar solapamientos
+    plt.show()  # Muestra la figura
+    # -------------------------------------------------------------------------
+
 def plot_numeric_comparison_by_target(df, variables, target_col, nombres_graficos, colores, bins=30, figsize=(14, 5)):
     """
     Genera gráficos comparativos (histograma + KDE + línea de media) para cada variable numérica,
