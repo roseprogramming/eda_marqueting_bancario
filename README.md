@@ -21,7 +21,7 @@ Este proyecto forma parte de la **entrega evaluable del Máster Data & Analytics
 
 **Dataset:** Campañas de marketing directo de un banco portugués (2012-2014), con 43,000 registros que incluyen variables demográficas, de contacto, macroeconómicas y resultado de suscripción a depósito a plazo.
 
-**Resultado:** Pipeline ETL completo, análisis exploratorio exhaustivo con 7 visualizaciones, identificación de segmentos de alto valor y detección de data leakage, todo documentado en informes ejecutivos listos para decisiones de negocio.
+**Resultado:** Pipeline ETL completo, análisis exploratorio exhaustivo con 12 visualizaciones, identificación de segmentos de alto valor y detección de data leakage, todo documentado en informes ejecutivos listos para decisiones de negocio.
 
 ---
 
@@ -86,13 +86,14 @@ EDA_Marketing_Bancario/
 │   ├── raw/             # bank-additional.csv, customer-details.xlsx
 │   └── processed/       # df_campaign_clean.csv, df_customer_details.csv, df_perfil_cliente.csv
 ├── notebooks/
-│   └── 01_EDA_Analisis.ipynb  # Notebook principal (estructura en 4 bloques)
+│   └── 01_EDA_Analisis.ipynb  # Notebook principal (estructura en 3 bloques)
 ├── src/
 │   ├── pipeline.py                 # Pipeline ETL de 9 pasos
 │   ├── analisis_exploratorio.py
 │   ├── data_cleaning.py
-│   ├── cleaning_campaing.py
-│   └── plotting.py                 # Funciones de visualización
+│   ├── cleaning_campaign.py
+│   ├── plotting.py                 # Funciones de visualización
+│   └── reporte_pdf.py              # Generación de reporte PDF
 ├── reports/
 │   ├── outputs/         # analisis_demografico_completo.txt
 │   └── documentacion/
@@ -123,9 +124,10 @@ El notebook `01_EDA_Analisis.ipynb` está organizado en **3 bloques principales*
 ```bash
 git clone https://github.com/roseprogramming/eda_marqueting_bancario.git
 cd eda_marqueting_bancario
-python -m venv .venv
+py -m venv .venv
 .venv\Scripts\activate      # Windows
 pip install -r requirements.txt
+pip install -e .            # Instalar paquete en modo editable
 ```
 
 Los datasets ya están incluidos en el repositorio.
@@ -137,7 +139,7 @@ Desde terminal:
 
 ```cmd
 cd tu\proyecto
-".venv\Scripts\python.exe" src/pipeline.py --profile
+python src/pipeline.py --profile
 ```
 
 **Eso es todo.** Genera 3 CSVs:
@@ -210,6 +212,23 @@ Variable `duration` solo conocida tras la llamada. Usar solo en análisis post-m
 
 ---
 
+## 📦 Variables recomendadas para modelado
+
+```python
+features = [
+    'age','education','job','marital',
+    'poutcome','contact','campaign','previous_contact',
+    'contact_month','contact_day_of_week',
+    'emp_var_rate','euribor3m','cons_price_idx',
+    'antiguedad_años'
+]
+target = 'y'
+```
+
+Excluir: income, kidhome, teenhome, duration.
+
+---
+
 ## � Dificultades Principales Encontradas
 
 **Nota:** Este proyecto fue completado en **10 sesiones interrumpidas** (semanas entre ellas). Las principales dificultades fueron:
@@ -261,7 +280,6 @@ Variable `duration` solo conocida tras la llamada. Usar solo en análisis post-m
 
 - KDE (Kernel Density Estimate) requería scipy
 - Necesitó instalar en venv + restart del kernel
-- Retraso: 30 minutos en la sesión final
 
 ### 9. **Decisiones Arquitectónicas Sin Claridad**
 
@@ -270,28 +288,18 @@ Variable `duration` solo conocida tras la llamada. Usar solo en análisis post-m
 - ¿Cuántas visualizaciones son "suficientes"?
 - Solución: **Documentar decisiones en docstrings y comments**
 
+### 10. **Bug en Limpieza de Variables Binarias**
+
+- **Contexto:** Las columnas `default`, `housing`, `loan` contenían valores 'yes'/'no' además de '1'/'0'.
+- **Problema:** La función de limpieza no contemplaba 'yes'/'no', dejándolos como '0' por defecto o causando inconsistencias.
+- **Detección:** Identificado al crear *unit tests* para el módulo de limpieza.
+- **Solución:** Actualizar el diccionario de reemplazo en `cleaning_campaign.py`.
+
 ### Reflexión sobre la evolución y el aprendizaje
 
 A lo largo del desarrollo, muchas de estas dificultades surgieron a medida que tomaba decisiones sobre la arquitectura y la modularidad del proyecto. Por un lado, busqué hacer el código más modular y robusto, dividiendo funciones en varios scripts y mejorando la reutilización. Por otro, fui simplificando el archivo principal (el notebook) para que fuera más claro y fácil de seguir.
 
 En ocasiones, al cambiar de estrategia o cuando una decisión no funcionaba como esperaba, tuve que identificar el punto exacto de error, volver atrás y restaurar partes del trabajo anterior, procurando no perder los avances y mejoras que sí me gustaban. Este proceso de prueba, error y ajuste me permitió aprender a equilibrar la complejidad técnica con la claridad y la mantenibilidad, y a valorar la importancia de la documentación y el control de versiones para no perder el progreso logrado.
-
----
-
-## �📦 Variables recomendadas para modelado
-
-```python
-features = [
-    'age','education','job','marital',
-    'poutcome','contact','campaign','previous_contact',
-    'contact_month','contact_day_of_week',
-    'emp_var_rate','euribor3m','cons_price_idx',
-    'antiguedad_años'
-]
-target = 'y'
-```
-
-Excluir: income, kidhome, teenhome, duration.
 
 ---
 
@@ -308,7 +316,7 @@ Excluir: income, kidhome, teenhome, duration.
 
 ## 🛠 Tecnologías
 
-Python 3.13 · pandas · numpy · seaborn · matplotlib · openpyxl · Jupyter
+Python 3.10+ · pandas · numpy · seaborn · matplotlib · openpyxl · Jupyter · fpdf2 · statsmodels
 
 ---
 
@@ -322,7 +330,7 @@ Python 3.13 · pandas · numpy · seaborn · matplotlib · openpyxl · Jupyter
 
 ## 🧪 Reproducibilidad Notebook
 
-Si módulos no cargan:
+Si no se instaló el paquete en modo editable (`pip install -e .`):
 
 ```python
 import sys, os
@@ -343,12 +351,12 @@ Repositorio: https://github.com/roseprogramming/eda_marqueting_bancario
 
 ## 📅 Última actualización
 
-Diciembre 2025
+Febrero 2026
 
 ---
 
 ### Sobre la documentación
 
-La documentación de este proyecto se ha hecho especialmente exhaustiva para no perderme yo misma durante el desarrollo y para no olvidar detalles importantes en el futuro. Este esfuerzo me ha servido mucho para entender mejor cada paso, justificar decisiones y poder retomar el trabajo en cualquier momento sin confusión. Además, parte de la documentación y la estructuración del proyecto se ha realizado con ayuda de herramientas de Inteligencia Artificial, lo que ha facilitado la organización, la revisión y la mejora continua del código y los informes.
+La documentación de este proyecto se ha hecho especialmente exhaustiva para no perderme yo misma durante el desarrollo y para no olvidar detalles importantes en el futuro. Este esfuerzo me ha servido mucho para entender mejor cada paso, justificar decisiones y poder retomar el trabajo en cualquier momento sin confusión.
 
 ---

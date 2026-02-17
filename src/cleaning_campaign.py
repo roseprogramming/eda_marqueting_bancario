@@ -13,7 +13,7 @@ Este módulo está diseñado para:
 ------------------------------------------------------
 FUNCIONES DISPONIBLES EN ESTE MÓDULO:
 ------------------------------------------------------
-1) clean_campaign_df(df_campaign_original)
+1) limpiar_df_campana(df_campaign_original)
     - Función principal que aplica la secuencia completa de limpieza y transformación del DataFrame de la campaña bancaria.
     - Pasos incluidos: corrección de separadores, conversión a `datetime`, recodificación de `pdays` y target `y`, imputación y tipado categórico.
     - Argumentos:
@@ -35,12 +35,12 @@ df_campaign_clean = cc.clean_campaign_df(df_campaign)
 print(df_campaign_clean.head())
 """
 
-# src/cleaning_campaing.py
+# src/cleaning_campaign.py
 import pandas as pd
 import numpy as np
 import src.data_cleaning as dc
 
-def clean_campaign_df(df_campaign_original):
+def limpiar_df_campana(df_campaign_original):
     """
     Limpia y transforma el DataFrame de campañas bancarias (df_campaign).
     Asegura tipos correctos para 'age' (int) y variables macro (float) 
@@ -95,7 +95,7 @@ def clean_campaign_df(df_campaign_original):
     for col in ['default', 'housing', 'loan']:
         if col in df.columns:
             df[col] = df[col].astype(str).str.split(',').str[0]
-            df[col] = df[col].replace({'nan': '0', 'unknown': '0', '0.0': '0', '1.0': '1'}).fillna('0')
+            df[col] = df[col].replace({'nan': '0', 'unknown': '0', '0.0': '0', '1.0': '1', 'yes': '1', 'no': '0'}).fillna('0')
 
     # 4. Imputaciones y Conversión a INT
     
@@ -108,7 +108,7 @@ def clean_campaign_df(df_campaign_original):
         df['age'] = df['age'].astype(int) 
 
     # B. Imputación por moda (solo 'education' en este punto)
-    df = dc.impute_mode(df, ['education']) 
+    df = dc.imputar_moda(df, ['education']) 
     
     # 5. CONVERSIÓN FINAL DE BINARIAS A INT
     for col in ['default', 'housing', 'loan']:
@@ -118,7 +118,7 @@ def clean_campaign_df(df_campaign_original):
     # 6. Forzar tipo category a columnas categóricas conocidas
     cats = ['job','marital','education','contact_month','contact_year','default','housing','loan']
     cats = [c for c in cats if c in df.columns]
-    df = dc.coerce_to_category(df, cats)
+    df = dc.forzar_a_categoria(df, cats)
     
     # 7. Eliminar columnas geográficas incorrectas (descontextualizadas)
     for c in ['lat', 'latitude', 'longitude', 'long']:

@@ -1,5 +1,13 @@
 # Python
 __pycache__/
+.antigravity/
+.pyre/
+.antigravityrc.json
+test_output.txt
+debug_monkeypatch.py
+profile_plotting.py
+INSTRUCCIONES_CONFIGURAR_PYRE_ANTIGRAVITY.md
+
 *.pyc
 *.pyo
 *.pyd

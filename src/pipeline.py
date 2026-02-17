@@ -33,8 +33,8 @@ if str(project_root) not in sys.path:
 
 
 # Importa funciones de limpieza de módulos propios
-from src.data_cleaning import clean_column_names
-from src.cleaning_campaing import clean_campaign_df
+from src.data_cleaning import limpiar_nombres_columnas
+from src.cleaning_campaign import limpiar_df_campana
 
 
 
@@ -43,7 +43,7 @@ def main():
     Ejecuta el pipeline completo replicando el flujo original del notebook en su primera versión.
     Flujo:
         1. Cargar raw data con index_col=0 (ignora Unnamed:0)
-        2. Limpiar campaña con clean_campaign_df() + clean_column_names()
+        2. Limpiar campaña con limpiar_df_campana() + limpiar_nombres_columnas()
         3. Guardar df_campaign_clean.csv (24 cols, id como columna)
         4. Concatenar customers con keys=['2012','2013','2014'] + reset_index(level=0)
         5. Normalizar customers con clean_column_names() + rename numwebvisitsmonth
@@ -71,10 +71,10 @@ def main():
     
     # 3. LIMPIAR CAMPAÑA
     print("\n[3/8] Limpiando campaña...")
-    df_campaign_clean = clean_campaign_df(df_campaign)  # Aplica limpieza específica de campaña
+    df_campaign_clean = limpiar_df_campana(df_campaign)  # Aplica limpieza específica de campaña
     print("  ✓ Módulo cleaning_campaing aplicado correctamente")
     
-    df_campaign_clean = clean_column_names(df_campaign_clean, verbose=True)  # Normaliza nombres de columnas
+    df_campaign_clean = limpiar_nombres_columnas(df_campaign_clean, verbose=True)  # Normaliza nombres de columnas
     print("  ✓ Limpieza de df_campaign completada")
     
     # 4. GUARDAR df_campaign_clean.csv
@@ -104,7 +104,7 @@ def main():
     
     # 6. NORMALIZAR CUSTOMERS
     print("\n[6/8] Normalizando nombres de columnas...")
-    df_customer_details = clean_column_names(df_customer_details, verbose=True)  # Normaliza nombres de columnas
+    df_customer_details = limpiar_nombres_columnas(df_customer_details, verbose=True)  # Normaliza nombres de columnas
     # Renombra manualmente la columna si existe
     if 'numwebvisitsmonth' in df_customer_details.columns:
         df_customer_details.rename(columns={'numwebvisitsmonth': 'num_web_visits_month'}, inplace=True)

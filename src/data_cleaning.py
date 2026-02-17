@@ -39,19 +39,21 @@ df_processed = results['df']
 # Importación de librerías principales
 import pandas as pd  # Para manejo de DataFrames
 import numpy as np   # Para operaciones numéricas
+import re  # Para expresiones regulares (usado en limpiar_nombres_columnas)
 from typing import List, Dict, Union, Optional  # Tipado estático
 
 
 # Lista de funciones exportadas por el módulo
 __all__ = [
-    "coerce_to_category",
-    "impute_median", 
-    "impute_mode",
-    "run_checks"
+    "forzar_a_categoria",
+    "imputar_mediana", 
+    "imputar_moda",
+    "ejecutar_chequeos",
+    "limpiar_nombres_columnas"
 ]
 
 
-def coerce_to_category(df: pd.DataFrame, columns: List[str], inplace: bool = False) -> pd.DataFrame:
+def forzar_a_categoria(df: pd.DataFrame, columns: List[str], inplace: bool = False) -> pd.DataFrame:
     """
     Convierte columnas especificadas al tipo category.
     Parámetros:
@@ -75,7 +77,7 @@ def coerce_to_category(df: pd.DataFrame, columns: List[str], inplace: bool = Fal
     return df
 
 
-def impute_median(df: pd.DataFrame, columns: List[str], inplace: bool = False) -> pd.DataFrame:
+def imputar_mediana(df: pd.DataFrame, columns: List[str], inplace: bool = False) -> pd.DataFrame:
     """
     Imputa la mediana en columnas numéricas especificadas.
     Parámetros:
@@ -99,7 +101,7 @@ def impute_median(df: pd.DataFrame, columns: List[str], inplace: bool = False) -
     return df
 
 
-def impute_mode(df: pd.DataFrame, columns: List[str], inplace: bool = False) -> pd.DataFrame:
+def imputar_moda(df: pd.DataFrame, columns: List[str], inplace: bool = False) -> pd.DataFrame:
     """
     Imputa la moda en columnas especificadas.
     Parámetros:
@@ -126,7 +128,7 @@ def impute_mode(df: pd.DataFrame, columns: List[str], inplace: bool = False) -> 
     return df
 
 
-def run_checks(
+def ejecutar_chequeos(
     df: pd.DataFrame,
     posibles_cat: Optional[List[str]] = None,
     inplace: bool = False,
@@ -148,7 +150,7 @@ def run_checks(
     
     # Si se especifican columnas para convertir a category
     if posibles_cat:
-        df_out = coerce_to_category(df_out, posibles_cat, inplace=True)
+        df_out = forzar_a_categoria(df_out, posibles_cat, inplace=True)
         resultados['converted_to_category'] = posibles_cat
 
     # Si se solicita, llama a analisis_exploratorio para reporting
@@ -172,36 +174,37 @@ if __name__ == "__main__":
         'C': ['alpha','beta','alpha','beta','alpha']
     })
     # Ejecuta run_checks con conversión a category y análisis exploratorio
-    res = run_checks(df_demo, posibles_cat=['A','C'], call_analisis=True)
+    res = ejecutar_chequeos(df_demo, posibles_cat=['A','C'], call_analisis=True)
     print("\nColumnas convertidas:", res.get('converted_to_category', []))
 
-def clean_column_names(df, verbose=True):
+def limpiar_nombres_columnas(df: pd.DataFrame, verbose: bool = True) -> pd.DataFrame:
     """
     Normaliza los nombres de columnas de un DataFrame al formato snake_case (PEP 8), asegurando consistencia y compatibilidad.
     
     Detalle de pasos realizados:
-    1. Convierte todos los nombres de columna a minúsculas para uniformidad.
-    2. Reemplaza puntos (.), espacios y guiones (-) por guiones bajos (_), facilitando el acceso por atributo y evitando errores.
-    3. Elimina cualquier carácter especial que no sea letra minúscula, número o guion bajo usando expresiones regulares (re.sub), para evitar problemas de sintaxis.
-    4. Sustituye múltiples guiones bajos consecutivos por uno solo, limpiando nombres generados por reemplazos múltiples.
-    5. Elimina guiones bajos al inicio o final del nombre, dejando nombres limpios y sin prefijos/sufijos innecesarios.
-    6. Genera un mapeo de nombres originales a normalizados y renombra las columnas del DataFrame usando este mapeo.
-    7. Si verbose=True, imprime un resumen de los cambios realizados (nombre original → nombre nuevo) o indica si ya cumplían el estándar.
+        1. Elimina espacios en blanco al inicio y final.
+        2. Reemplaza espacios internos por guiones bajos (_).
+        3. Reemplaza puntos (.) por guiones bajos (_).
+        4. Convierte todo a minúsculas.
+        5. Elimina caracteres no alfanuméricos (excepto guiones bajos).
+        6. Elimina guiones bajos duplicados o innecesarios.
     
-    Parámetros:
-        df (pd.DataFrame): DataFrame a normalizar.
-        verbose (bool): Si True, muestra el mapeo de nombres antiguos → nuevos.
-    Retorna:
-        pd.DataFrame: DataFrame con columnas normalizadas.
+    Args:
+        df (pd.DataFrame): DataFrame original.
+        verbose (bool): Si es True, imprime los cambios realizados.
+        
+    Returns:
+        pd.DataFrame: Copia del DataFrame con nombres de columnas normalizados.
+        
     Ejemplo:
-        >>> df.columns = ['ID', 'cons.price.idx', 'Dt_Customer', 'KidHome_']
-        >>> df_clean = clean_column_names(df)
+        >>> df_original = pd.DataFrame(columns=['ID', 'cons.price.idx', 'Dt_Customer', 'KidHome_'])
+        >>> df_clean = limpiar_nombres_columnas(df_original)
         ID → id
         cons.price.idx → cons_price_idx
         Dt_Customer → dt_customer
         KidHome_ → kidhome
     """
-    import re  # Para expresiones regulares
+    df_normalizado = df.copy()
     mapeo = {}  # Diccionario para almacenar el mapeo de nombres originales a normalizados
     for col in df.columns:
         # 1. Convierte el nombre a minúsculas para uniformidad

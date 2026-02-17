@@ -1,12 +1,14 @@
 
 # Lista de funciones exportadas por el módulo para importación controlada
 __all__ = [
-    'plot_numeric_distribution',
-    'plot_categorical_rate',
-    'plot_correlation_heatmap',
-    'plot_boxplot_by_target',
-    'save_plot',
-    'plot_numeric_comparison_by_target'
+    'graficar_distribucion_numerica',
+    'graficar_tasa_categorica',
+    'graficar_mapa_correlacion',
+    'graficar_boxplot_por_target',
+    'guardar_grafico',
+    'graficar_comparacion_numerica',
+    'graficar_nulos_outliers',
+    'graficar_tendencias_temporales'
 ]
 
 """
@@ -48,11 +50,16 @@ Características:
 
 # Importación de librerías principales para visualización y manipulación de datos
 
+# pyre-ignore[21]: Could not find module `pandas`
+# pyre-ignore[21]: Could not find module `numpy`
+# pyre-ignore[21]: Could not find module `matplotlib.pyplot`
+# pyre-ignore[21]: Could not find module `seaborn`
 import pandas as pd  # Para manejo de DataFrames
 import numpy as np   # Para operaciones numéricas
 import matplotlib.pyplot as plt  # Para gráficos
 import seaborn as sns  # Para gráficos estadísticos avanzados
 from pathlib import Path  # Para manipulación de rutas de archivos
+from typing import Any
 
 
 # Configuración global de estilo para todos los gráficos del proyecto
@@ -64,7 +71,7 @@ sns.set_palette("husl")  # Paleta de colores para consistencia visual
 # FUNCIONES DE VISUALIZACIÓN
 # =============================================================================
 
-def plot_numeric_distribution(df, column, title=None, figsize=(10, 6), bins=30, color='steelblue'):
+def graficar_distribucion_numerica(df: Any, column: Any, title=None, figsize=(10, 6), bins=30, color='steelblue'):
     """
     Dibuja un histograma con KDE y línea de media para una variable numérica.
     Útil para analizar la distribución y detectar sesgos, outliers o asimetrías.
@@ -126,7 +133,7 @@ def plot_numeric_distribution(df, column, title=None, figsize=(10, 6), bins=30, 
     return fig, ax
 
 
-def plot_categorical_rate(df, category_col, target_col, title=None, figsize=(12, 6), 
+def graficar_tasa_categorica(df: Any, category_col: Any, target_col: Any, title=None, figsize=(12, 6), 
                           top_n=None, rotation=45, *, color_palette='viridis', ax=None):
     """
     Dibuja un gráfico de barras con la tasa de conversión (porcentaje de éxito) para cada categoría de una variable categórica.
@@ -201,7 +208,7 @@ def plot_categorical_rate(df, category_col, target_col, title=None, figsize=(12,
     ax.set_xticklabels(tasas.index, rotation=rotation, ha='right')
     ax.set_xlabel(category_col.replace('_', ' ').title(), fontsize=12)
     ax.set_ylabel('Tasa de Conversión (%)', fontsize=12)
-    ax.set_title(title or f'Tasa de Suscripción por {category_col.replace('_', ' ').title()}', fontsize=14, fontweight='bold')
+    ax.set_title(title or f"Tasa de Suscripción por {category_col.replace('_', ' ').title()}", fontsize=14, fontweight='bold')
     ax.legend()
     ax.grid(axis='y', alpha=0.3)
     # Devuelve la figura y el eje si se crearon aquí, o solo el eje si se pasó externo
@@ -211,7 +218,7 @@ def plot_categorical_rate(df, category_col, target_col, title=None, figsize=(12,
         return None, ax
 
 
-def plot_correlation_heatmap(df, title=None, figsize=(12, 10), cmap='coolwarm', 
+def graficar_mapa_correlacion(df: Any, title=None, figsize=(12, 10), cmap='coolwarm', 
                              annot=True, fmt='.2f', vmin=-1, vmax=1):
     """
     Dibuja un mapa de calor (heatmap) de la matriz de correlación entre variables numéricas.
@@ -259,7 +266,7 @@ def plot_correlation_heatmap(df, title=None, figsize=(12, 10), cmap='coolwarm',
     return fig, ax
 
 
-def plot_boxplot_by_target(df, numeric_col, target_col, title=None, figsize=(8, 6), palette='rocket'):
+def graficar_boxplot_por_target(df: Any, numeric_col: Any, target_col: Any, title=None, figsize=(8, 6), palette='rocket'):
     """
     Dibuja un boxplot para comparar la distribución de una variable numérica según el valor del target.
     Útil para visualizar diferencias de dispersión, mediana y outliers entre grupos (ej: y=0 vs y=1).
@@ -292,7 +299,7 @@ def plot_boxplot_by_target(df, numeric_col, target_col, title=None, figsize=(8, 
     # Configura etiquetas y título
     ax.set_xlabel(f'{target_col} (0=No, 1=Sí)', fontsize=12)
     ax.set_ylabel(numeric_col.replace('_', ' ').title(), fontsize=12)
-    ax.set_title(title or f'Distribución de {numeric_col.replace('_', ' ').title()} vs. Suscripción', fontsize=14, fontweight='bold')
+    ax.set_title(title or f"Distribución de {numeric_col.replace('_', ' ').title()} vs. Suscripción", fontsize=14, fontweight='bold')
     ax.grid(axis='y', alpha=0.3)
     
     # Devuelve la figura y el eje
@@ -303,7 +310,7 @@ def plot_boxplot_by_target(df, numeric_col, target_col, title=None, figsize=(8, 
 # FUNCIONES AUXILIARES
 # =============================================================================
 
-def plot_nulls_and_outliers(df, nulos_plot, vars_con_outliers):
+def graficar_nulos_outliers(df: Any, nulos_plot: Any, vars_con_outliers: Any):
     """
     Visualiza el porcentaje de valores nulos y los outliers de variables numéricas en un DataFrame.
     Genera una figura con dos subplots:
@@ -327,7 +334,7 @@ def plot_nulls_and_outliers(df, nulos_plot, vars_con_outliers):
     # -------------------------------------------------------------------------
     n_nulos = max(1, len(nulos_plot))  # Número de variables con nulos (mínimo 1)
     n_out = max(1, len(vars_con_outliers))  # Número de variables con outliers (mínimo 1)
-    fig_width = max(8, 2.5 * max(n_nulos, n_out))  # Ancho dinámico
+    fig_width = max(8, int(2.5 * max(n_nulos, n_out)))  # Ancho dinámico
     subplot_height = 6  # Altura fija por subplot
     fig, axes = plt.subplots(2, 1, figsize=(fig_width, subplot_height*2), gridspec_kw={'height_ratios': [1, 1]})  # Dos subplots verticales
 
@@ -367,10 +374,10 @@ def plot_nulls_and_outliers(df, nulos_plot, vars_con_outliers):
         axes[1].set_axis_off()  # Oculta el subplot si no hay outliers
 
     plt.tight_layout()  # Ajusta el layout para evitar solapamientos
-    plt.show()  # Muestra la figura
+    return fig, axes
     # -------------------------------------------------------------------------
 
-def plot_numeric_comparison_by_target(df, variables, target_col, nombres_graficos, colores, bins=30, figsize=(14, 5)):
+def graficar_comparacion_numerica(df: Any, variables: Any, target_col: Any, nombres_graficos: Any, colores: Any, bins=30, figsize=(14, 5)):
     """
     Genera gráficos comparativos (histograma + KDE + línea de media) para cada variable numérica,
     separando por el valor del target (ej: y=0 vs y=1). Cada gráfico se guarda automáticamente.
@@ -389,7 +396,9 @@ def plot_numeric_comparison_by_target(df, variables, target_col, nombres_grafico
         - Incluye histograma, KDE y línea de media en cada subplot.
         - Guarda el gráfico en reports/outputs/ y lo muestra en pantalla.
     """
+    # pyre-ignore[21]: Could not find module `matplotlib.pyplot`
     import matplotlib.pyplot as plt  # Importación local para evitar conflictos si se usa fuera de notebooks
+    generated_plots = []
     for var in variables:
         if var in df.columns:
             # Crea una figura con dos subplots (uno para y=0 y otro para y=1)
@@ -398,34 +407,46 @@ def plot_numeric_comparison_by_target(df, variables, target_col, nombres_grafico
                 # Filtra los datos según el valor del target y elimina nulos
                 data = df[df[target_col] == y_val][var].dropna()
                 # Dibuja el histograma para el grupo correspondiente
+                # pyre-ignore[16]: axes is dynamically typed
+                # pyre-ignore[24]: Generic type mismatch
                 axes[i].hist(
                     data,
                     bins=bins,
+                    # pyre-ignore[16]: Item `Any` of `Any` is not an indexable.
+                    color=colores[var][i],
                     alpha=0.7,
                     edgecolor='black',
                     density=True,
-                    label=f'Histograma y={y_val}',
-                    color=colores[var][i]
+                    label=f'Histograma y={y_val}'
                 )
                 # Si hay datos, dibuja la KDE y la línea de media
                 if not data.empty:
+                    # pyre-ignore[16]: axes likely Any
                     data.plot.kde(ax=axes[i], color='darkred', linewidth=2, label='KDE')
                     mean = data.mean()
+                    # pyre-ignore[16]: axes likely Any
                     axes[i].axvline(mean, color='green', linestyle='--', linewidth=2, label=f'Media: {mean:.2f}')
                 # Configura etiquetas y título de cada subplot
+                # pyre-ignore[16]: axes likely Any
                 axes[i].set_xlabel(var, fontsize=12)
+                # pyre-ignore[16]: axes likely Any
                 axes[i].set_ylabel('Densidad', fontsize=12)
+                # pyre-ignore[16]: axes likely Any
                 axes[i].set_title(f'{var} (y={y_val})', fontsize=13, fontweight='bold')
+                # pyre-ignore[16]: axes likely Any
                 axes[i].legend()
+                # pyre-ignore[16]: axes likely Any
                 axes[i].grid(axis='y', alpha=0.3)
             # Ajusta el layout para que no se solapen los subplots
             plt.tight_layout()
             # Guarda el gráfico usando la función auxiliar
-            save_plot(nombres_graficos[var])
-            # Muestra el gráfico en pantalla
-            plt.show()
+            # pyre-ignore[16]: Item `Any` of `Any` is not an indexable.
+            guardar_grafico(nombres_graficos[var])
+            generated_plots.append((fig, axes))
 
-def save_plot(filename, dpi=300, bbox_inches='tight'):
+    return generated_plots
+
+def guardar_grafico(filename, dpi=300, bbox_inches='tight'):
     """
     Guarda la figura actual de matplotlib en la carpeta reports/outputs/ del proyecto.
     Crea la carpeta si no existe y muestra la ruta final por consola.
@@ -458,3 +479,50 @@ def save_plot(filename, dpi=300, bbox_inches='tight'):
     plt.savefig(output_path, dpi=dpi, bbox_inches=bbox_inches)
     # Imprime la ruta donde se guardó el gráfico
     print(f"Gráfico guardado en: {output_path}")
+
+
+def graficar_tendencias_temporales(df: Any, columna_fecha: Any, target_col: Any, nombre_grafico: Any):
+    """
+    Genera un gráfico dual (barras para volumen, línea para tasa de éxito) 
+    para analizar tendencias temporales.
+
+    Parámetros:
+        df: DataFrame con los datos
+        columna_fecha: Columna con la fecha o periodo (ej: 'contact_month')
+        target_col: Variable objetivo (0/1)
+        nombre_grafico: Nombre del archivo para guardar
+    """
+    # pyre-ignore[21]: Could not find module `matplotlib.pyplot`
+    import matplotlib.pyplot as plt
+    # pyre-ignore[21]: Could not find module `seaborn`
+    import seaborn as sns
+    
+    # Agrupar datos
+    temp_df = df.groupby(columna_fecha)[target_col].agg(['count', 'mean']).reset_index()
+    temp_df.columns = [columna_fecha, 'volumen', 'tasa_exito']
+    temp_df['tasa_exito'] = temp_df['tasa_exito'] * 100
+
+    fig, ax1 = plt.subplots(figsize=(12, 6))
+
+    # Gráfico de barras (Volumen)
+    sns.barplot(data=temp_df, x=columna_fecha, y='volumen', color='skyblue', alpha=0.6, ax=ax1)
+    ax1.set_ylabel('Cantidad de Contactos', color='blue')
+    ax1.tick_params(axis='y', labelcolor='blue')
+
+    # Eje secundario para Tasa de Éxito
+    ax2 = ax1.twinx()
+    sns.lineplot(data=temp_df, x=columna_fecha, y='tasa_exito', color='red', marker='o', linewidth=2, ax=ax2)
+    ax2.set_ylabel('Tasa de Conversión (%)', color='red')
+    ax2.tick_params(axis='y', labelcolor='red')
+
+    # Línea promedio global
+    global_rate = df[target_col].mean() * 100
+    ax2.axhline(global_rate, color='green', linestyle='--', label=f'Promedio: {global_rate:.1f}%')
+    ax2.legend(loc='upper right')
+
+    plt.title(f'Tendencia Temporal: {columna_fecha}', fontsize=14)
+    plt.tight_layout()
+    
+    # Usar guardar_grafico que ya existe en el módulo
+    guardar_grafico(nombre_grafico)
+    return fig, ax1

@@ -1,0 +1,8 @@
+[tool.pyright]
+venvPath = "."
+venv = "venv"
+include = ["src", "."]
+
+[tool.pyre]
+source_directories = ["src", "."]
+search_path = ["venv/Lib/site-packages"]

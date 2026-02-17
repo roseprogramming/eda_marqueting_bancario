@@ -12,7 +12,7 @@ El análisis exploratorio consolidó un "Master Dataset" de **43,000 registros**
 
 - **Perfil demográfico:** edad, educación, ocupación, estado civil
 - **Historial de campaña:** contacto previo, resultado anterior, frecuencia
-- **Variables macroeconómicas:** emp_var_rate, euribor3m, cons_price_idx, nr_employed
+- **Variables macroeconómicas:** emp_var_rate, euribor3m, cons_price_idx,
 - **Variables derivadas:** antiguedad_años, segmento_edad, previous_contact
 
 ### Hallazgos clave cuantificados:
@@ -46,11 +46,6 @@ El análisis completo se encuentra en [reports/outputs/analisis_EDA_completo.txt
 
 📄 Proceso técnico detallado: [informe_preliminar.md](archive/informe_preliminar.md).
 
-Detalles técnicos completos:
-
-- reports/documentacion/archive/informe_preliminar.md
-
----
 
 ## 3) Insights clave
 
@@ -264,7 +259,7 @@ Buenas prácticas:
 ### Código fuente
 - `src/pipeline.py` → Pipeline ETL completo (9 pasos)
 - `src/data_cleaning.py` → Limpieza de customer details
-- `src/cleaning_campaing.py` → Limpieza de campaña
+- `src/cleaning_campaign.py` → Limpieza de campaña
 - `src/analisis_exploratorio.py` → Funciones EDA
 - `src/plotting.py` → Visualizaciones y guardado
 
