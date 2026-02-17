@@ -43,7 +43,8 @@ Thumbs.db
 desktop.ini
 
 # Archivos temporales de análisis (regenerables)
-reports/outputs/*.txt
+# EXCLUIDOS: informe_ejecutivo_eda.pdf y analisis_EDA_completo.txt
+# Se incluyen en el repositorio para que sean visibles desde GitHub sin ejecutar
 
 # Logs
 *.log

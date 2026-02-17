@@ -1,0 +1,69 @@
+
+================================================================================
+RESUMEN EJECUTIVO: ANÁLISIS EXPLORATORIO DE DATOS (EDA)
+================================================================================
+Generado: 2026-02-17 19:22:32
+================================================================================
+
+📅 ANÁLISIS TEMPORAL - Patrones estacionales:
+
+  DISTRIBUCIÓN POR MES (date):
+    Mayor tasa: 2016-10 → 14.3% (735 registros)
+    Menor tasa: 2017-09 → 8.6% (735 registros)
+
+  AÑO DE CONTACTO (contact_year):
+   2015: 10.9% (8544 registros)
+   2016: 11.7% (8533 registros)
+   2017: 11.0% (8562 registros)
+   2018: 11.5% (8549 registros)
+   2019: 11.3% (8564 registros)
+
+📊 VARIABLES NUMÉRICAS - Diferencias entre grupos (y=1 vs y=0):
+  • EDAD DEL CLIENTE: 1.02x (y=1/y=0)
+  • INGRESOS DEL CLIENTE: 0.99x (y=1/y=0)
+  • ANTIGÜEDAD DEL CLIENTE: 0.84x (y=1/y=0)
+
+📊 VARIABLES CATEGÓRICAS - Tasas de conversión destacadas:
+
+  OCUPACIÓN:
+    Mayor: student → 31.3%
+    Menor: blue-collar → 6.9%
+
+  ESTADO CIVIL:
+    Mayor: SINGLE → 13.9%
+    Menor: DIVORCED → 10.2%
+
+  SEGMENTO DE EDAD:
+    Mayor: 65+ → 46.0%
+    Menor: 46-55 → 8.7%
+
+  NIVEL EDUCATIVO:
+    Mayor: illiterate → 22.2%
+    Menor: basic.9y → 7.8%
+
+🌍 VARIABLES MACROECONÓMICAS - Correlaciones con conversión:
+  • emp_var_rate: Corr = -0.298
+  • euribor3m: Corr = -0.266
+  • cons_price_idx: Corr = -0.135
+  • nr_employed: Corr = -0.356
+
+📞 FACTORES DE CAMPAÑA - Duración y resultado anterior:
+
+  DURACIÓN DE LLAMADA:
+    Ratio (y=1/y=0): 2.50x
+    Las llamadas exitosas duran 150.2% más
+
+  RESULTADO ANTERIOR (poutcome):
+    SUCCESS: 65.3% (n=1436)
+    FAILURE: 14.2% (n=4461)
+    NONEXISTENT: 8.8% (n=37103)
+
+================================================================================
+HALLAZGOS CLAVE:
+  • Total de variables analizadas: 18
+  • Variables temporales: 3
+  • Variables numéricas: 3
+  • Variables categóricas: 4
+  • Variables macroeconómicas: 4
+  • Factores de campaña: 2
+================================================================================
